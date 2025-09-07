@@ -19,7 +19,6 @@ import { toast } from "react-toastify";
 import Link from "next/link";
 import { Loader2 } from "lucide-react";
 import { useUser } from "@/context/UserContext";
-import Image from "next/image";
 
 const Login = () => {
   const router = useRouter();
@@ -53,7 +52,7 @@ const Login = () => {
     try {
       const res = await loginUser(loginData);
       if (res?.success === true) {
-        toast.success("Login successful");
+        toast.success("Login successful!");
         setIsLoading(true);
         router.push("/");
       } else {
@@ -67,207 +66,112 @@ const Login = () => {
     }
   };
 
-  if (!isClient) return null; // Prevents hydration mismatch
+  if (!isClient) return null;
 
-  // return (
-  //   <section className="bg-gray-100 w-11/12 min-h-screen flex items-center justify-center px-6">
-  //     <div className="w-11/12">
-  //       <Image fill alt="img" src={"https://hp-media-prod-bucket.s3.ap-south-1.amazonaws.com/media/None/app-banner-25-new1.jpg"}/>
-  //     </div>
-  //     <div className="w-full max-w-md bg-white rounded-lg shadow-lg p-6 border border-gray-300">
-  //       <h1 className="text-2xl font-bold text-gray-900 text-center mb-4">
-  //         Sign in to your account
-  //       </h1>
-  //       <div className="flex gap-2 justify-center">
-  //         <button onClick={handleTestCredential} className="btn btn-warning">
-  //           Customer Credentials
-  //         </button>
-  //         <button onClick={handleTestCredential2} className="btn btn-warning">
-  //           Admin Credentials
-  //         </button>
-  //       </div>
-  //       <Form {...form}>
-  //         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-  //           <div>
-  //             <label className="block mb-2 text-sm font-medium text-gray-900">
-  //               Your email
-  //             </label>
-  //             <FormField
-  //               control={form.control}
-  //               name="email"
-  //               render={({ field }) => (
-  //                 <FormItem>
-  //                   <FormControl>
-  //                     <Input
-  //                       {...field}
-  //                       placeholder="name@domain.com"
-  //                       className="w-full border border-gray-300 p-2 rounded-lg"
-  //                       autoComplete="off" // Prevent LastPass from modifying HTML
-  //                     />
-  //                   </FormControl>
-  //                   <FormMessage />
-  //                 </FormItem>
-  //               )}
-  //             />
-  //           </div>
-  //           <div>
-  //             <label className="block mb-2 text-sm font-medium text-gray-900">
-  //               Password
-  //             </label>
-  //             <FormField
-  //               control={form.control}
-  //               name="password"
-  //               render={({ field }) => (
-  //                 <FormItem>
-  //                   <FormControl>
-  //                     <Input
-  //                       type="password"
-  //                       {...field}
-  //                       placeholder="••••••••"
-  //                       className="w-full border border-gray-300 p-2 rounded-lg"
-  //                       autoComplete="new-password" // Prevent autofill issues
-  //                     />
-  //                   </FormControl>
-  //                   <FormMessage />
-  //                 </FormItem>
-  //               )}
-  //             />
-  //           </div>
-
-  //           <Button
-  //             type="submit"
-  //             className="btn-custom w-full text-white font-medium rounded-lg p-2"
-  //             disabled={loading}
-  //           >
-  //             {loading ? (
-  //               <>
-  //                 <Loader2 className="animate-spin mr-2 h-5 w-5" />
-  //                 Logging in...
-  //               </>
-  //             ) : (
-  //               "Sign in"
-  //             )}
-  //           </Button>
-
-  //           <p className="text-sm text-gray-600 text-center">
-  //             Don’t have an account yet?{" "}
-  //             <Link href="/register" className="text-blue-600 hover:underline">
-  //               Sign up
-  //             </Link>
-  //           </p>
-  //         </form>
-  //       </Form>
-  //     </div>
-  //   </section>
-  // );
   return (
-    <section className="bg-gray-100 min-h-screen flex items-center justify-center px-6">
-      <div className="flex w-full max-w-6xl bg-white rounded-lg shadow-lg overflow-hidden border border-gray-300">
-        {/* Left Side: Image */}
-        <div className="w-1/2 relative hidden md:block">
-          <Image
-            src="https://hp-media-prod-bucket.s3.ap-south-1.amazonaws.com/media/None/app-banner-25-new1.jpg"
-            alt="login-banner"
-            fill
-            className="object-cover"
-            unoptimized
-          />
+    <section className="min-h-screen flex items-center justify-center px-6 bg-pink-50">
+      <div className="w-full max-w-md bg-white rounded-2xl shadow-lg border border-pink-200 p-8">
+        {/* Title */}
+        <h1 className="text-3xl font-bold text-pink-600 text-center mb-6">
+          Sign in to your account
+        </h1>
+
+        {/* Test Credentials */}
+        <div className="flex gap-3 justify-center mb-6">
+          <button
+            onClick={handleTestCredential}
+            className="px-4 py-2 bg-pink-100 text-pink-700 font-medium rounded-lg hover:bg-pink-200 transition"
+          >
+            Customer Login
+          </button>
+          <button
+            onClick={handleTestCredential2}
+            className="px-4 py-2 bg-pink-100 text-pink-700 font-medium rounded-lg hover:bg-pink-200 transition"
+          >
+            Admin Login
+          </button>
         </div>
 
-        {/* Right Side: Login Form */}
-        <div className="w-full md:w-1/2 p-6 flex flex-col justify-center">
-          <h1 className="text-2xl font-bold text-gray-900 text-center mb-4">
-            Sign in to your account
-          </h1>
-          <div className="flex gap-2 justify-center mb-4">
-            <button onClick={handleTestCredential} className="btn btn-warning">
-              Customer Credentials
-            </button>
-            <button onClick={handleTestCredential2} className="btn btn-warning">
-              Admin Credentials
-            </button>
-          </div>
-
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              {/* Email */}
-              <div>
-                <label className="block mb-2 text-sm font-medium text-gray-900">
-                  Your email
-                </label>
-                <FormField
-                  control={form.control}
-                  name="email"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormControl>
-                        <Input
-                          {...field}
-                          placeholder="name@domain.com"
-                          className="w-full border border-gray-300 p-2 rounded-lg"
-                          autoComplete="off"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              {/* Password */}
-              <div>
-                <label className="block mb-2 text-sm font-medium text-gray-900">
-                  Password
-                </label>
-                <FormField
-                  control={form.control}
-                  name="password"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormControl>
-                        <Input
-                          type="password"
-                          {...field}
-                          placeholder="••••••••"
-                          className="w-full border border-gray-300 p-2 rounded-lg"
-                          autoComplete="new-password"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              {/* Submit */}
-              <Button
-                type="submit"
-                className="btn-custom w-full text-white font-medium rounded-lg p-2"
-                disabled={loading}
-              >
-                {loading ? (
-                  <>
-                    <Loader2 className="animate-spin mr-2 h-5 w-5" />
-                    Logging in...
-                  </>
-                ) : (
-                  "Sign in"
+        {/* Form */}
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+            {/* Email */}
+            <div>
+              <label className="block mb-2 text-sm font-medium text-gray-900">
+                Email
+              </label>
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        placeholder="name@domain.com"
+                        className="w-full border border-gray-300 p-3 rounded-lg focus:border-pink-400 focus:ring-pink-300"
+                        autoComplete="off"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
                 )}
-              </Button>
+              />
+            </div>
 
-              {/* Register link */}
-              <p className="text-sm text-gray-600 text-center">
-                Don’t have an account yet?{" "}
-                <Link
-                  href="/register"
-                  className="text-blue-600 hover:underline"
-                >
-                  Sign up
-                </Link>
-              </p>
-            </form>
-          </Form>
-        </div>
+            {/* Password */}
+            <div>
+              <label className="block mb-2 text-sm font-medium text-gray-900">
+                Password
+              </label>
+              <FormField
+                control={form.control}
+                name="password"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormControl>
+                      <Input
+                        type="password"
+                        {...field}
+                        placeholder="••••••••"
+                        className="w-full border border-gray-300 p-3 rounded-lg focus:border-pink-400 focus:ring-pink-300"
+                        autoComplete="new-password"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            {/* Submit */}
+            <Button
+              type="submit"
+              className="w-full bg-pink-600 hover:bg-pink-700 text-white font-semibold rounded-lg py-3 transition flex items-center justify-center"
+              disabled={loading}
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="animate-spin mr-2 h-5 w-5" />
+                  Logging in...
+                </>
+              ) : (
+                "Sign in"
+              )}
+            </Button>
+
+            {/* Register link */}
+            <p className="text-sm text-gray-600 text-center">
+              Don’t have an account yet?{" "}
+              <Link
+                href="/register"
+                className="text-pink-600 hover:underline font-medium"
+              >
+                Sign up
+              </Link>
+            </p>
+          </form>
+        </Form>
       </div>
     </section>
   );

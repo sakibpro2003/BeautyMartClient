@@ -19,7 +19,6 @@ import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 import Link from "next/link";
 import { Loader2 } from "lucide-react";
-import Image from "next/image";
 
 const RegisterForm = () => {
   const router = useRouter();
@@ -43,13 +42,10 @@ const RegisterForm = () => {
   });
 
   const onSubmit: SubmitHandler<FieldValues> = async (userData) => {
-    console.log("clicking");
     setLoading(true);
     try {
       const res = await registerUser(userData);
-      console.log(userData, "user data reg");
       if (res?.success === true) {
-        // console.log(res,'res form')
         toast.success("Registration successful!");
         router.push("/login");
       } else {
@@ -69,25 +65,18 @@ const RegisterForm = () => {
   if (!isClient) return null;
 
   return (
-    <section className="bg-gray-100 min-h-screen flex items-center justify-center px-6">
-      <div className="flex w-full max-w-6xl bg-white rounded-lg shadow-lg overflow-hidden border border-gray-300">
-        {/* Left: Image */}
-        <div className="w-1/2 relative hidden md:block">
-          <Image
-            src="https://hp-media-prod-bucket.s3.ap-south-1.amazonaws.com/media/None/app-banner-25-new1.jpg"
-            alt="register-banner"
-            fill
-            className="object-cover"
-            unoptimized
-          />
+    <section className="min-h-screen flex items-center justify-center px-6 bg-gradient-to-br from-pink-50 via-white to-pink-100">
+      <div className="w-full max-w-md rounded-2xl shadow-xl bg-white border border-pink-200 overflow-hidden">
+        {/* Header */}
+        <div className="p-6 border-b border-pink-100 text-center bg-pink-50">
+          <h3 className="text-3xl font-bold text-pink-600">Create Account</h3>
+          <p className="text-sm text-gray-600 mt-1">
+            Join BeautyMart for exclusive deals & beauty tips ✨
+          </p>
         </div>
 
-        {/* Right: Form */}
-        <div className="w-full md:w-1/2 p-6 flex flex-col justify-center">
-          <h3 className="text-3xl font-semibold text-center text-gray-900 mb-6">
-            Sign Up
-          </h3>
-
+        {/* Form Section */}
+        <div className="p-6">
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
               {/* Name Field */}
@@ -96,9 +85,13 @@ const RegisterForm = () => {
                 name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Name</FormLabel>
+                    <FormLabel className="text-pink-600">Name</FormLabel>
                     <FormControl>
-                      <Input {...field} value={field.value ?? ""} />
+                      <Input
+                        {...field}
+                        value={field.value ?? ""}
+                        className="focus:ring-pink-500 focus:border-pink-500"
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -111,12 +104,13 @@ const RegisterForm = () => {
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Email</FormLabel>
+                    <FormLabel className="text-pink-600">Email</FormLabel>
                     <FormControl>
                       <Input
                         {...field}
                         value={field.value ?? ""}
                         type="email"
+                        className="focus:ring-pink-500 focus:border-pink-500"
                       />
                     </FormControl>
                     <FormMessage />
@@ -130,27 +124,18 @@ const RegisterForm = () => {
                 name="phone"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Phone</FormLabel>
+                    <FormLabel className="text-pink-600">Phone</FormLabel>
                     <FormControl>
-                      <Input {...field} value={field.value ?? ""} />
+                      <Input
+                        {...field}
+                        value={field.value ?? ""}
+                        className="focus:ring-pink-500 focus:border-pink-500"
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-              {/* <FormField
-                control={form.control}
-                name="profileImage"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Profile Image URL</FormLabel>
-                    <FormControl>
-                      <Input {...field} value={field.value ?? ""} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              /> */}
 
               {/* Password Field */}
               <FormField
@@ -158,12 +143,13 @@ const RegisterForm = () => {
                 name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Password</FormLabel>
+                    <FormLabel className="text-pink-600">Password</FormLabel>
                     <FormControl>
                       <Input
                         {...field}
                         type="password"
                         value={field.value ?? ""}
+                        className="focus:ring-pink-500 focus:border-pink-500"
                       />
                     </FormControl>
                     <FormMessage />
@@ -177,12 +163,15 @@ const RegisterForm = () => {
                 name="confirm_password"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Confirm Password</FormLabel>
+                    <FormLabel className="text-pink-600">
+                      Confirm Password
+                    </FormLabel>
                     <FormControl>
                       <Input
                         {...field}
                         type="password"
                         value={field.value ?? ""}
+                        className="focus:ring-pink-500 focus:border-pink-500"
                       />
                     </FormControl>
                     {password &&
@@ -199,7 +188,7 @@ const RegisterForm = () => {
               {/* Submit Button */}
               <Button
                 type="submit"
-                className="w-full btn-custom text-white flex justify-center items-center"
+                className="w-full bg-pink-500 hover:bg-pink-600 text-white font-semibold py-2 rounded-lg flex justify-center items-center transition-colors"
                 disabled={
                   loading ||
                   !password ||
@@ -213,14 +202,17 @@ const RegisterForm = () => {
                     Registering...
                   </>
                 ) : (
-                  "Register"
+                  "Sign Up"
                 )}
               </Button>
 
               {/* Link to Login */}
               <p className="text-center text-sm text-gray-600">
                 Already have an account?{" "}
-                <Link href="/login" className="text-blue-500 hover:underline">
+                <Link
+                  href="/login"
+                  className="text-pink-500 font-medium hover:underline"
+                >
                   Sign in
                 </Link>
               </p>
