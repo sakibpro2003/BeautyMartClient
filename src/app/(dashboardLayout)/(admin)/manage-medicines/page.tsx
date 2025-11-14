@@ -55,10 +55,10 @@ const ManageMedicines = () => {
   return (
     <div className="lg:p-6 rounded-lg shadow-md">
       <div className="flex justify-between flex-wrap">
-        <h1 className="text-2xl font-bold mb-4">Manage Medicines</h1>
+        <h1 className="text-2xl font-bold mb-4">Manage Products</h1>
         <div className="flex gap-2">
           <Link href={"/create-new-medicine"} className="btn-custom">
-            Add New Medicine
+            Add New Product
           </Link>
           <button onClick={handleLogout} className="btn-custom">
             Logout

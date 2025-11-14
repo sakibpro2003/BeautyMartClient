@@ -70,12 +70,12 @@ const ProductForm = () => {
     <div className="min-h-screen flex items-center justify-center bg-gray-100 overflow-auto">
       <div className="max-w-3xl w-full p-6 bg-white shadow-lg rounded-lg border border-gray-300">
         <h2 className="text-2xl font-bold mb-6 text-center">
-          Create New Medicine
+          Add New Product
         </h2>
         <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-4">
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium">Medicine Name</label>
+              <label className="block text-sm font-medium">Product Name</label>
               <input
                 type="text"
                 name="name"
