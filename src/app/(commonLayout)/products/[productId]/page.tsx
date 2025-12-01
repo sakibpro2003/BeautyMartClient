@@ -19,6 +19,7 @@ const ProductDetails = ({
   const [product, setProduct] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
+  const isOutOfStock = !product?.inStock || product?.quantity <= 0;
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -41,6 +42,11 @@ const ProductDetails = ({
   };
 
   const handleAddToCart = async (id: string) => {
+    if (isOutOfStock) {
+      toast.error("Product is out of stock.");
+      return;
+    }
+
     setIsAddingToCart(true);
     const payload: TAddCart = { quantity: 1, product: id };
 
@@ -71,92 +77,202 @@ const ProductDetails = ({
   }
 
   return (
-    <div className="max-w-5xl m-10 mx-auto p-6 bg-white shadow-xl rounded-2xl mt-6 border border-pink-100">
+    <div className="min-h-screen bg-gradient-to-br from-amber-50 via-white to-pink-50 pb-16">
       <ToastContainer position="top-right" autoClose={3000} />
-
-      <div className="grid lg:grid-cols-2 gap-8">
-        {/* Product Image */}
-        <div className="flex justify-center items-center bg-pink-50 rounded-xl p-6">
-          <Image
-            width={350}
-            height={350}
-            src={product?.image || "/placeholder.jpg"}
-            alt={product?.name || "Product Image"}
-            className="rounded-xl shadow-md"
-            unoptimized
-          />
+      <div className="max-w-6xl mx-auto px-4 lg:px-6 pt-10">
+        <div className="flex flex-wrap items-center gap-3 text-xs font-semibold uppercase tracking-[0.18em] text-pink-600/80">
+          <span className="rounded-full bg-white/70 px-3 py-1 ring-1 ring-pink-100">Products</span>
+          <span className="rounded-full bg-pink-50 px-3 py-1 ring-1 ring-pink-100">
+            {product?.category || "Beauty"}
+          </span>
+          {product?.requiredPrescription && (
+            <span className="rounded-full bg-amber-100 px-3 py-1 text-amber-800 ring-1 ring-amber-200">
+              Prescription
+            </span>
+          )}
+          <span
+            className={`rounded-full px-3 py-1 ring-1 ${
+              isOutOfStock
+                ? "bg-rose-50 text-rose-700 ring-rose-100"
+                : "bg-emerald-50 text-emerald-700 ring-emerald-100"
+            }`}
+          >
+            {isOutOfStock ? "Out of stock" : "In stock"}
+          </span>
         </div>
 
-        {/* Product Details */}
-        <div className="text-gray-800">
-          <h1 className="text-3xl font-bold text-pink-600">
-            {product?.name || "No Name"}
-          </h1>
-          <p className="text-gray-600 mt-3">{product?.description || "No Description"}</p>
+        <div className="mt-6 grid gap-8 lg:grid-cols-[1.05fr_0.95fr]">
+          <div className="relative rounded-3xl bg-white/80 p-6 shadow-[0_25px_80px_rgba(255,183,197,0.25)] ring-1 ring-pink-100/70 backdrop-blur">
+            <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-pink-50 via-white to-amber-50 blur-2xl -z-10" />
+            <div className="grid gap-6">
+              <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-white via-pink-50 to-amber-50 ring-1 ring-pink-100/60 shadow-inner">
+                <Image
+                  width={600}
+                  height={500}
+                  src={product?.image || "/placeholder.jpg"}
+                  alt={product?.name || "Product Image"}
+                  className="mx-auto h-[420px] w-full object-contain transition duration-500 hover:scale-[1.02]"
+                  unoptimized
+                />
+                {product?.discount ? (
+                  <span className="absolute left-4 top-4 inline-flex items-center rounded-full bg-gradient-to-r from-rose-500 to-orange-400 px-3 py-1 text-[11px] font-semibold text-white shadow-lg shadow-rose-200/50">
+                    {product.discount}% off
+                  </span>
+                ) : null}
+              </div>
 
-          <p className="text-2xl text-pink-600 font-semibold mt-5 border-b pb-2 border-pink-200">
-            Price: ${product?.price || "N/A"}
-          </p>
-
-          <p className="mt-3 text-gray-700 font-medium">
-            Quantity: <span className="text-pink-600">{product?.quantity || "N/A"}</span>
-          </p>
-
-          <div className="mt-5 flex items-center space-x-4">
-            <span
-              className={`px-4 py-2 rounded-lg text-white text-sm font-medium shadow ${
-                product?.inStock ? "bg-pink-600" : "bg-gray-400"
-              }`}
-            >
-              {product?.inStock ? "In Stock" : "Out of Stock"}
-            </span>
-          </div>
-
-          <div className="mt-6 text-gray-700 space-y-2">
-            <p>
-              <strong className="text-pink-600">Manufacturer:</strong>{" "}
-              {product?.manufacturer?.name || "Unknown"}
-            </p>
-            <p>
-              <strong className="text-pink-600">Address:</strong>{" "}
-              {product?.manufacturer?.address || "N/A"}
-            </p>
-            <p>
-              <strong className="text-pink-600">Contact:</strong>{" "}
-              {product?.manufacturer?.contact || "N/A"}
-            </p>
-          </div>
-
-          <p className="mt-3 text-gray-700">
-            <strong className="text-pink-600">Expiry Date:</strong>{" "}
-            {product?.expiryDate
-              ? new Date(product.expiryDate).toLocaleDateString()
-              : "N/A"}
-          </p>
-
-          {product?.requiredPrescription && (
-            <div className="mt-5 px-4 py-2 bg-pink-100 text-pink-700 text-sm rounded-lg border border-pink-200">
-              Prescription Required
+              <div className="grid gap-4 rounded-2xl bg-white/90 p-4 ring-1 ring-gray-100 shadow-sm">
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="rounded-xl bg-pink-50 px-4 py-3 ring-1 ring-pink-100">
+                    <p className="text-xs font-semibold uppercase text-pink-600">Price</p>
+                    <p className="text-2xl font-bold text-gray-900">${product?.price || "N/A"}</p>
+                  </div>
+                  <div className="rounded-xl bg-gray-50 px-4 py-3 ring-1 ring-gray-100">
+                    <p className="text-xs font-semibold uppercase text-gray-500">Quantity</p>
+                    <p className="text-lg font-semibold text-gray-800">
+                      {product?.quantity ?? "N/A"}{" "}
+                      <span className="text-sm font-medium text-gray-500">units left</span>
+                    </p>
+                  </div>
+                </div>
+                <div className="grid gap-3 sm:grid-cols-3">
+                  <div className="rounded-xl border border-gray-100 bg-white px-4 py-3">
+                    <p className="text-xs font-semibold uppercase text-gray-500">Brand</p>
+                    <p className="text-sm font-medium text-gray-900">
+                      {product?.manufacturer?.name || product?.brand || "Unknown"}
+                    </p>
+                  </div>
+                  <div className="rounded-xl border border-gray-100 bg-white px-4 py-3">
+                    <p className="text-xs font-semibold uppercase text-gray-500">Form</p>
+                    <p className="text-sm font-medium text-gray-900">
+                      {product?.form || "Standard"}
+                    </p>
+                  </div>
+                  <div className="rounded-xl border border-gray-100 bg-white px-4 py-3">
+                    <p className="text-xs font-semibold uppercase text-gray-500">Expiry</p>
+                    <p className="text-sm font-medium text-gray-900">
+                      {product?.expiryDate
+                        ? new Date(product.expiryDate).toLocaleDateString()
+                        : "N/A"}
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
-          )}
+          </div>
+
+          <div className="space-y-5">
+            <div className="rounded-3xl bg-white/90 p-6 shadow-[0_18px_60px_rgba(0,0,0,0.06)] ring-1 ring-gray-100">
+              <div className="flex items-start justify-between gap-4">
+                <div className="space-y-2">
+                  <h1 className="text-3xl font-bold text-gray-900 leading-tight">
+                    {product?.name || "No Name"}
+                  </h1>
+                  <p className="text-sm text-gray-600">
+                    {product?.description || "No description available."}
+                  </p>
+                </div>
+                {product?.rating ? (
+                  <div className="rounded-2xl bg-amber-50 px-4 py-2 text-center ring-1 ring-amber-100">
+                    <p className="text-xs font-semibold text-amber-700">Rating</p>
+                    <p className="text-xl font-bold text-amber-800">{product.rating.toFixed(1)}</p>
+                  </div>
+                ) : null}
+              </div>
+
+              <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                <div className="rounded-2xl bg-gradient-to-r from-pink-600 to-orange-500 px-5 py-4 text-white shadow-lg shadow-pink-200/60">
+                  <p className="text-sm font-semibold">Total</p>
+                  <p className="text-3xl font-bold">
+                    ${product?.price || "N/A"}
+                    <span className="ml-2 text-sm font-medium text-orange-100">incl. taxes</span>
+                  </p>
+                </div>
+                <div className="flex items-center gap-3 rounded-2xl border border-gray-200 bg-white px-4 py-3">
+                  <span
+                    className={`inline-flex h-10 w-10 items-center justify-center rounded-full text-sm font-bold ${
+                      isOutOfStock ? "bg-rose-50 text-rose-700" : "bg-emerald-50 text-emerald-700"
+                    }`}
+                  >
+                    {isOutOfStock ? "!" : "✓"}
+                  </span>
+                  <div>
+                    <p className="text-xs font-semibold text-gray-500">Availability</p>
+                    <p className="text-sm font-semibold text-gray-900">
+                      {isOutOfStock ? "Currently unavailable" : "Ready to ship"}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-5 space-y-3">
+                <button
+                  onClick={() => handleAddToCart(productId)}
+                  className={`w-full py-3 text-white text-lg font-semibold rounded-2xl transition flex justify-center items-center shadow-md ${
+                    isOutOfStock
+                      ? "bg-gray-400 cursor-not-allowed"
+                      : "bg-pink-600 hover:-translate-y-0.5 hover:shadow-lg hover:bg-pink-700"
+                  }`}
+                  disabled={isAddingToCart || isOutOfStock}
+                >
+                  {isAddingToCart ? (
+                    <>
+                      <Loader2 className="animate-spin mr-2 h-5 w-5" />
+                      Adding to Cart...
+                    </>
+                  ) : (
+                    "Add To Cart"
+                  )}
+                </button>
+                <div className="flex items-center justify-between text-xs text-gray-600">
+                  <span className="inline-flex items-center gap-2">
+                    <span className="h-2 w-2 rounded-full bg-emerald-400" />
+                    Free delivery on orders over $50
+                  </span>
+                  <span>Secure checkout</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="rounded-3xl bg-white/90 p-6 shadow-sm ring-1 ring-gray-100 space-y-4">
+              <h2 className="text-lg font-bold text-gray-900">Product details</h2>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="rounded-xl border border-gray-100 bg-gray-50 px-4 py-3">
+                  <p className="text-xs font-semibold uppercase text-gray-500">Category</p>
+                  <p className="text-sm font-semibold text-gray-900">
+                    {product?.category || "General"}
+                  </p>
+                </div>
+                <div className="rounded-xl border border-gray-100 bg-gray-50 px-4 py-3">
+                  <p className="text-xs font-semibold uppercase text-gray-500">Prescription</p>
+                  <p className="text-sm font-semibold text-gray-900">
+                    {product?.requiredPrescription ? "Required" : "Not required"}
+                  </p>
+                </div>
+                <div className="rounded-xl border border-gray-100 bg-gray-50 px-4 py-3">
+                  <p className="text-xs font-semibold uppercase text-gray-500">Manufacturer</p>
+                  <p className="text-sm font-semibold text-gray-900">
+                    {product?.manufacturer?.name || "Unknown"}
+                  </p>
+                  <p className="text-xs text-gray-600">
+                    {product?.manufacturer?.address || "Address not provided"}
+                  </p>
+                </div>
+                <div className="rounded-xl border border-gray-100 bg-gray-50 px-4 py-3">
+                  <p className="text-xs font-semibold uppercase text-gray-500">Contact</p>
+                  <p className="text-sm font-semibold text-gray-900">
+                    {product?.manufacturer?.contact || "N/A"}
+                  </p>
+                </div>
+              </div>
+              <div className="rounded-2xl border border-dashed border-pink-200 bg-pink-50/70 px-4 py-3 text-sm text-pink-800">
+                Lovingly curated for self-care enthusiasts. Check availability before purchase to
+                ensure timely delivery.
+              </div>
+            </div>
+          </div>
         </div>
       </div>
-
-      {/* Add to Cart Button */}
-      <button
-        onClick={() => handleAddToCart(productId)}
-        className="mt-8 w-full py-3 bg-pink-600 text-white text-lg font-semibold rounded-xl hover:bg-pink-700 transition flex justify-center items-center shadow-md"
-        disabled={isAddingToCart}
-      >
-        {isAddingToCart ? (
-          <>
-            <Loader2 className="animate-spin mr-2 h-5 w-5" />
-            Adding to Cart...
-          </>
-        ) : (
-          "Add To Cart"
-        )}
-      </button>
     </div>
   );
 };

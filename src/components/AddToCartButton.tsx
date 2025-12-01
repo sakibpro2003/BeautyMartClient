@@ -6,10 +6,21 @@ import { Loader2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "react-toastify";
 
-const AddToCartButton = ({ productId }: { productId: string }) => {
+const AddToCartButton = ({
+  productId,
+  inStock = true,
+}: {
+  productId: string;
+  inStock?: boolean;
+}) => {
   const [loading, setLoading] = useState(false);
 
   const handleAddToCart = async () => {
+    if (!inStock) {
+      toast.error("Product is out of stock.");
+      return;
+    }
+
     setLoading(true);
     try {
       const res = await addToCart({ quantity: 1, product: productId });
@@ -25,8 +36,10 @@ const AddToCartButton = ({ productId }: { productId: string }) => {
   return (
     <button
       onClick={handleAddToCart}
-      disabled={loading}
-      className="w-full py-3 bg-black text-white text-lg font-semibold rounded-xl hover:bg-gray-900 transition flex justify-center items-center"
+      disabled={loading || !inStock}
+      className={`w-full py-3 text-white text-lg font-semibold rounded-xl transition flex justify-center items-center ${
+        loading || !inStock ? "bg-gray-400 cursor-not-allowed" : "bg-black hover:bg-gray-900"
+      }`}
     >
       {loading ? (
         <>
