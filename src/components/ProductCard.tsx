@@ -8,7 +8,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { StarRating } from "./StarRating";
 
-const limit = 12;
+const limit = 8;
 const sortOptions = [
   { value: "newest", label: "Newest" },
   { value: "price-asc", label: "Price: Low to High" },
@@ -251,7 +251,7 @@ const ProductCard = () => {
         )}
 
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-[320px_1fr]">
-          <div className="space-y-4">
+          <div className="space-y-4 lg:sticky lg:top-24 lg:self-start">
             <div className="rounded-2xl bg-white/90 p-4 shadow-sm ring-1 ring-gray-100">
               <div className="flex items-center justify-between">
                 <h3 className="text-sm font-semibold text-gray-800">Filters</h3>
@@ -399,9 +399,9 @@ const ProductCard = () => {
           </div>
 
           <div className="space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
               {initialLoading ? (
-                Array.from({ length: 6 }).map((_, idx) => (
+                Array.from({ length: 8 }).map((_, idx) => (
                   <div
                     key={idx}
                     className="h-64 rounded-2xl bg-gray-50 shadow-inner animate-pulse"
@@ -411,66 +411,85 @@ const ProductCard = () => {
                 <p className="text-center col-span-full text-gray-500">No products found</p>
               ) : (
                 products.map((p) => (
-                  <div
-                    key={p._id}
-                    className="group relative flex flex-col rounded-2xl bg-white/90 p-4 shadow-md ring-1 ring-gray-100 transition hover:-translate-y-1 hover:shadow-xl"
-                  >
-                    {p.discount ? (
-                      <span className="absolute left-3 top-3 inline-flex items-center rounded-full bg-rose-50 px-3 py-1 text-[11px] font-semibold text-rose-700 ring-1 ring-rose-100">
-                        {p.discount}% off
-                      </span>
-                    ) : null}
-                    <div className="flex justify-center">
-                      <Image
-                        src={p.image}
-                        alt={p.name}
-                        width={220}
-                        height={220}
-                        className="rounded-xl object-cover"
-                        unoptimized
+                  <div key={p._id} className="group relative h-full">
+                    <div className="absolute inset-0 -z-10 rounded-3xl bg-gradient-to-br from-pink-50 via-white to-amber-50 opacity-0 blur-xl transition duration-500 group-hover:opacity-100" />
+                    <div className="relative flex h-full flex-col overflow-hidden rounded-3xl border border-white/50 bg-white/85 p-4 shadow-[0_18px_60px_rgba(255,183,197,0.18)] ring-1 ring-pink-100/70 backdrop-blur-sm transition duration-500 hover:-translate-y-1.5 hover:shadow-[0_25px_90px_rgba(255,183,197,0.3)]">
+                      <div
+                        aria-hidden
+                        className="absolute inset-x-3 top-2 h-16 rounded-2xl bg-gradient-to-br from-white via-white/70 to-pink-50/70 blur-xl"
                       />
-                    </div>
-                    <div className="mt-3 space-y-2">
-                      <div className="flex items-start justify-between gap-2">
-                        <h3 className="text-lg font-semibold text-gray-900 line-clamp-2">
-                          {p.name}
-                        </h3>
-                        {p.requiredPrescription && (
-                          <span className="rounded-full bg-gray-900 px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-white">
-                            Rx
+                      {p.discount ? (
+                        <span className="absolute left-4 top-4 inline-flex items-center rounded-full bg-gradient-to-r from-rose-500 to-orange-400 px-3 py-1 text-[11px] font-semibold text-white shadow-lg shadow-rose-200/50">
+                          {p.discount}% off
+                        </span>
+                      ) : null}
+
+                      <div className="relative flex justify-center">
+                        <div className="relative h-48 w-full overflow-hidden rounded-2xl bg-gradient-to-br from-pink-50 via-white to-amber-50 ring-1 ring-pink-100/60">
+                          <Image
+                            src={p.image}
+                            alt={p.name}
+                            width={260}
+                            height={240}
+                            className="h-full w-full object-contain transition duration-500 group-hover:scale-105 group-hover:rotate-[0.5deg]"
+                            unoptimized
+                          />
+                        </div>
+                      </div>
+
+                      <div className="mt-4 flex flex-1 flex-col space-y-3">
+                        <div className="flex items-start justify-between gap-2">
+                          <h3 className="text-lg font-semibold text-gray-900 line-clamp-2">
+                            {p.name}
+                          </h3>
+                          {p.requiredPrescription && (
+                            <span className="rounded-full bg-gray-900 px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-white">
+                              Rx
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="flex items-center gap-2 text-xs text-amber-500">
+                          <StarRating rating={p.rating || 0} />
+                          <span className="text-gray-600">
+                            {p.rating ? p.rating.toFixed(1) : "New"}
                           </span>
-                        )}
+                        </div>
+
+                        <p className="text-sm text-gray-600 line-clamp-2">{p.description}</p>
+
+                        <div className="flex items-center justify-between">
+                          <span className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-pink-600 to-orange-500 px-3 py-1 text-sm font-bold text-white shadow-lg shadow-pink-200/60">
+                            ${p.price}
+                          </span>
+                          <span
+                            className={`rounded-full px-3 py-1 text-xs font-semibold ring-1 ${
+                              p.inStock
+                                ? "bg-emerald-50 text-emerald-700 ring-emerald-100"
+                                : "bg-rose-50 text-rose-700 ring-rose-100"
+                            }`}
+                          >
+                            {p.inStock ? "In stock" : "Out of stock"}
+                          </span>
+                        </div>
+
+                        <div className="flex items-center justify-between text-xs text-gray-500">
+                          <span className="rounded-full bg-gray-100 px-2 py-1 font-semibold uppercase tracking-wide text-gray-700">
+                            {p.category}
+                          </span>
+                          <span className="rounded-full bg-white px-2 py-1 font-semibold text-gray-700 ring-1 ring-gray-100">
+                            {p.manufacturer?.name}
+                          </span>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-2 text-xs text-amber-500">
-                        <StarRating rating={p.rating || 0} />
-                        <span className="text-gray-600">
-                          {p.rating ? p.rating.toFixed(1) : "New"}
-                        </span>
-                      </div>
-                      <p className="text-sm text-gray-600 line-clamp-2">{p.description}</p>
-                      <div className="flex items-center justify-between">
-                        <p className="text-xl font-bold text-pink-700">${p.price}</p>
-                        <span
-                          className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                            p.inStock
-                              ? "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100"
-                              : "bg-rose-50 text-rose-700 ring-1 ring-rose-100"
-                          }`}
-                        >
-                          {p.inStock ? "In stock" : "Out of stock"}
-                        </span>
-                      </div>
-                      <div className="flex items-center justify-between text-xs text-gray-500">
-                        <span className="uppercase tracking-wide">{p.category}</span>
-                        <span>{p.manufacturer?.name}</span>
-                      </div>
+
+                      <Link
+                        href={`/products/${p._id}`}
+                        className="mt-4 inline-flex items-center justify-center rounded-full bg-gray-900 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-gray-300 transition duration-300 hover:-translate-y-0.5 hover:bg-gradient-to-r hover:from-pink-600 hover:to-orange-500 md:mt-auto"
+                      >
+                        View details
+                      </Link>
                     </div>
-                    <Link
-                      href={`/products/${p._id}`}
-                      className="mt-3 inline-flex items-center justify-center rounded-full bg-pink-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-pink-200 transition hover:-translate-y-0.5 hover:bg-pink-700"
-                    >
-                      View details
-                    </Link>
                   </div>
                 ))
               )}
