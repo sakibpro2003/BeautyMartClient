@@ -12,6 +12,8 @@ import { CheckCircle2, Clock, DollarSign, Package, XCircle } from "lucide-react"
 const MyOrders = () => {
   const [orders, setOrders] = useState<TOrder[]>([]);
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const pageSize = 3;
 
   useEffect(() => {
     const fetchOrders = async () => {
@@ -19,6 +21,7 @@ const MyOrders = () => {
         const response = await getOrders();
         if (response.success) {
           setOrders(response.data);
+          setPage(1);
         }
       } catch (error) {
         console.error("Error fetching orders:", error);
@@ -35,6 +38,12 @@ const MyOrders = () => {
     const completed = orders.filter((o) => o.status === "completed").length;
     return { totalSpent, active, completed };
   }, [orders]);
+
+  const totalPages = Math.max(1, Math.ceil(orders.length / pageSize));
+  const paginatedOrders = useMemo(
+    () => orders.slice((page - 1) * pageSize, page * pageSize),
+    [orders, page],
+  );
 
   if (loading) {
     return (
@@ -89,7 +98,7 @@ const MyOrders = () => {
       </div>
 
       <div className="grid gap-4">
-        {orders.map((order) => {
+        {paginatedOrders.map((order) => {
           const { bg, text, Icon } = statusConfig(order.status);
           return (
             <div
@@ -140,6 +149,34 @@ const MyOrders = () => {
           );
         })}
       </div>
+
+      {orders.length > pageSize && (
+        <div className="flex flex-col items-center justify-between gap-3 rounded-2xl bg-white/90 p-4 text-sm text-gray-700 shadow-sm ring-1 ring-gray-100 md:flex-row">
+          <p className="text-xs text-gray-500">
+            Showing {(page - 1) * pageSize + 1} - {Math.min(page * pageSize, orders.length)} of{" "}
+            {orders.length}
+          </p>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
+              disabled={page === 1}
+              className="rounded-full border border-gray-200 px-4 py-2 text-xs font-semibold text-gray-700 disabled:opacity-50"
+            >
+              Previous
+            </button>
+            <span className="text-xs font-semibold text-gray-600">
+              Page {page} of {totalPages}
+            </span>
+            <button
+              onClick={() => setPage((prev) => Math.min(prev + 1, totalPages))}
+              disabled={page === totalPages}
+              className="rounded-full border border-gray-200 px-4 py-2 text-xs font-semibold text-gray-700 disabled:opacity-50"
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
