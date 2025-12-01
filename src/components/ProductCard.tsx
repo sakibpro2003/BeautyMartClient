@@ -1,37 +1,169 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { getAllProducts } from "@/services/AuthService";
 import Image from "next/image";
 import Link from "next/link";
-import Loader from "./Loader";
 import { useSearchParams } from "next/navigation";
+import { StarRating } from "./StarRating";
+
+const limit = 12;
+const sortOptions = [
+  { value: "newest", label: "Newest" },
+  { value: "price-asc", label: "Price: Low to High" },
+  { value: "price-desc", label: "Price: High to Low" },
+  { value: "rating-desc", label: "Top Rated" },
+  { value: "name-asc", label: "Name A-Z" },
+];
+const categories = [
+  "Skincare",
+  "Haircare",
+  "Makeup",
+  "Fragrance",
+  "Bath",
+  "Nails",
+  "Men",
+  "Lip",
+];
+const forms = ["Tablet", "Syrup", "Injection", "Ointment", "Capsulec"];
 
 const ProductCard = () => {
   const [products, setProducts] = useState<any[]>([]);
-  const [filteredProducts, setFilteredProducts] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [currentPage, setCurrentPage] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [meta, setMeta] = useState<{ page: number; totalPages: number; total: number }>({
+    page: 1,
+    totalPages: 1,
+    total: 0,
+  });
   const [searchQuery, setSearchQuery] = useState("");
-  const [sortOption, setSortOption] = useState("default");
+  const [sortOption, setSortOption] = useState("newest");
   const [categoryFilter, setCategoryFilter] = useState("");
   const [formFilter, setFormFilter] = useState("");
   const [prescriptionFilter, setPrescriptionFilter] = useState("");
   const [stockFilter, setStockFilter] = useState("");
-  const itemsPerPage = 8;
+  const [minPrice, setMinPrice] = useState("");
+  const [maxPrice, setMaxPrice] = useState("");
+  const [minRating, setMinRating] = useState("");
+  const [brandFilterLocal, setBrandFilterLocal] = useState("");
 
   const searchParams = useSearchParams();
   const brandFilter = searchParams.get("brand");
   const categoryQuery = searchParams.get("category");
 
+  const queryString = useMemo(() => {
+    const params = new URLSearchParams();
+    params.set("page", String(page));
+    params.set("limit", String(limit));
+
+    if (searchQuery.trim()) params.set("search", searchQuery.trim());
+    const effectiveCategory = categoryQuery || categoryFilter;
+    if (effectiveCategory) params.set("category", effectiveCategory);
+    if (formFilter) params.set("form", formFilter);
+    if (prescriptionFilter)
+      params.set("requiredPrescription", prescriptionFilter === "yes" ? "true" : "false");
+    if (stockFilter) params.set("inStock", stockFilter === "in" ? "true" : "false");
+    const effectiveBrand = brandFilter || brandFilterLocal;
+    if (effectiveBrand) params.set("brand", effectiveBrand);
+    if (minPrice) params.set("minPrice", minPrice);
+    if (maxPrice) params.set("maxPrice", maxPrice);
+    if (minRating) params.set("minRating", minRating);
+
+    switch (sortOption) {
+      case "price-asc":
+        params.set("sortBy", "price");
+        params.set("sortOrder", "asc");
+        break;
+      case "price-desc":
+        params.set("sortBy", "price");
+        params.set("sortOrder", "desc");
+        break;
+      case "rating-desc":
+        params.set("sortBy", "rating");
+        params.set("sortOrder", "desc");
+        break;
+      case "name-asc":
+        params.set("sortBy", "name");
+        params.set("sortOrder", "asc");
+        break;
+      default:
+        params.set("sortBy", "created_at");
+        params.set("sortOrder", "desc");
+    }
+    return params.toString();
+  }, [
+    page,
+    searchQuery,
+    categoryFilter,
+    categoryQuery,
+    formFilter,
+    prescriptionFilter,
+    stockFilter,
+    minPrice,
+    maxPrice,
+    minRating,
+    sortOption,
+    brandFilter,
+    brandFilterLocal,
+  ]);
+
+  const activeFilters = useMemo(() => {
+    const chips: string[] = [];
+    if (searchQuery) chips.push(`Search: ${searchQuery}`);
+    if (brandFilterLocal || brandFilter) chips.push(`Brand: ${brandFilterLocal || brandFilter}`);
+    if (categoryQuery || categoryFilter) chips.push(`Category: ${categoryQuery || categoryFilter}`);
+    if (formFilter) chips.push(`Form: ${formFilter}`);
+    if (minPrice) chips.push(`Min $${minPrice}`);
+    if (maxPrice) chips.push(`Max $${maxPrice}`);
+    if (minRating) chips.push(`Rating ≥ ${minRating}`);
+    if (stockFilter) chips.push(stockFilter === "in" ? "In stock" : "Out of stock");
+    if (prescriptionFilter) chips.push(prescriptionFilter === "yes" ? "Rx required" : "No Rx");
+    return chips;
+  }, [
+    searchQuery,
+    brandFilterLocal,
+    brandFilter,
+    categoryQuery,
+    categoryFilter,
+    formFilter,
+    minPrice,
+    maxPrice,
+    minRating,
+    stockFilter,
+    prescriptionFilter,
+  ]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [
+    searchQuery,
+    categoryFilter,
+    categoryQuery,
+    formFilter,
+    prescriptionFilter,
+    stockFilter,
+    minPrice,
+    maxPrice,
+    minRating,
+    sortOption,
+    brandFilter,
+    brandFilterLocal,
+  ]);
+
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const response = await getAllProducts();
+        setLoading(true);
+        const response = await getAllProducts(queryString);
         if (Array.isArray(response?.data)) {
           setProducts(response.data);
-          setFilteredProducts(response.data);
+          setMeta({
+            page: response?.meta?.page || 1,
+            totalPages: response?.meta?.totalPages || 1,
+            total: response?.meta?.total || response?.data?.length || 0,
+          });
         } else {
           console.log("Unexpected API response:", response);
         }
@@ -39,250 +171,335 @@ const ProductCard = () => {
         console.error("Error fetching products:", error);
       } finally {
         setLoading(false);
+        setInitialLoading(false);
       }
     };
 
     fetchProducts();
-  }, []);
+  }, [queryString]);
 
-  useEffect(() => {
-    let updated = [...products];
-
-    // Search
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      updated = updated.filter(
-        (product) =>
-          product.name.toLowerCase().includes(query) ||
-          product.category?.toLowerCase().includes(query) ||
-          product.description?.toLowerCase().includes(query)
-      );
-    }
-
-    // Filters
-    // if (categoryFilter)
-    //   updated = updated.filter((p) => p.category === categoryFilter);
-    const effectiveCategory = categoryQuery || categoryFilter;
-    if (effectiveCategory)
-      updated = updated.filter((p) => p.category === effectiveCategory);
-
-    if (formFilter) updated = updated.filter((p) => p.form === formFilter);
-    if (prescriptionFilter)
-      updated = updated.filter(
-        (p) => p.requiredPrescription === (prescriptionFilter === "yes")
-      );
-    if (stockFilter)
-      updated = updated.filter((p) => p.inStock === (stockFilter === "in"));
-
-    // Brand filter from URL query
-    if (brandFilter) {
-      const brandLower = brandFilter.toLowerCase();
-      updated = updated.filter(
-        (p) => p.manufacturer?.name?.toLowerCase() === brandLower
-      );
-    }
-
-    // Sorting
-    if (sortOption === "lowToHigh") {
-      updated.sort((a, b) => a.price - b.price);
-    } else if (sortOption === "highToLow") {
-      updated.sort((a, b) => b.price - a.price);
-    }
-
-    setFilteredProducts(updated);
-    setCurrentPage(1);
-  }, [
-    searchQuery,
-    products,
-    sortOption,
-    categoryFilter,
-    formFilter,
-    prescriptionFilter,
-    stockFilter,
-    brandFilter,
-    categoryQuery,
-  ]);
-
-  if (loading) return <Loader />;
-
-  const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const selectedProducts = filteredProducts.slice(
-    startIndex,
-    startIndex + itemsPerPage
-  );
+  const clearFilters = () => {
+    setSearchQuery("");
+    setCategoryFilter("");
+    setFormFilter("");
+    setPrescriptionFilter("");
+    setStockFilter("");
+    setMinPrice("");
+    setMaxPrice("");
+    setMinRating("");
+    setBrandFilterLocal("");
+    setSortOption("newest");
+  };
 
   return (
-    <div className="p-4 w-11/12 mx-auto h-screen">
-      <div className="flex flex-col  lg:flex-row gap-6">
-        {/* Sidebar Filters */}
-        {/* <div className="lg:w-1/4 w-full p-4 border-2  rounded-md space-y-4">
+    <div className="w-11/12 mx-auto py-10">
+      <div className="rounded-3xl bg-white/85 p-6 md:p-8 shadow-[0_18px_60px_rgba(0,0,0,0.08)] ring-1 ring-pink-100/70 space-y-6">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
-            <h3 className="font-bold text-xl mb-2">Search</h3>
+            <p className="text-xs uppercase tracking-[0.25em] text-pink-600/80">Shop all</p>
+            <h1 className="text-3xl font-bold text-gray-900">Beauty essentials</h1>
+            <p className="text-gray-600 text-sm">{meta.total} products curated for you</p>
+          </div>
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="relative">
+              <input
+                type="search"
+                placeholder="Search products..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="rounded-full border border-pink-100 bg-white px-4 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-pink-200"
+              />
+            </div>
             <input
               type="text"
-              placeholder="Name or symptoms"
-              className="input input-bordered w-full"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Brand"
+              value={brandFilterLocal || brandFilter || ""}
+              onChange={(e) => setBrandFilterLocal(e.target.value)}
+              className="rounded-full border border-pink-100 bg-white px-4 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-pink-200"
             />
-          </div>
-
-          <div>
-            <label className="font-semibold">Sort by Price</label>
             <select
-              className="select select-bordered w-full mt-1"
               value={sortOption}
               onChange={(e) => setSortOption(e.target.value)}
+              className="rounded-full border border-pink-100 bg-white px-4 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-pink-200"
             >
-              <option value="default">Default</option>
-              <option value="lowToHigh">Low to High</option>
-              <option value="highToLow">High to Low</option>
+              {sortOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
             </select>
-          </div>
-
-          <div>
-            <label className="font-semibold">Category</label>
-            <select
-              className="select select-bordered w-full mt-1"
-              value={categoryFilter}
-              onChange={(e) => setCategoryFilter(e.target.value)}
+            <button
+              onClick={clearFilters}
+              className="rounded-full border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-700 hover:border-pink-200 hover:text-pink-700"
             >
-              <option value="">All</option>
-              <option value="Painkiller">Painkiller</option>
-              <option value="Antibiotic">Antibiotic</option>
-              <option value="Cold">Cold</option>
-              <option value="Vitamin">Vitamin</option>
-              <option value="Antacid">Antacid</option>
-            </select>
+              Clear
+            </button>
           </div>
+        </div>
 
-          <div>
-            <label className="font-semibold">Form</label>
-            <select
-              className="select select-bordered w-full mt-1"
-              value={formFilter}
-              onChange={(e) => setFormFilter(e.target.value)}
-            >
-              <option value="">All</option>
-              <option value="Tablet">Tablet</option>
-              <option value="Syrup">Syrup</option>
-              <option value="Injection">Injection</option>
-            </select>
+        {activeFilters.length > 0 && (
+          <div className="flex flex-wrap gap-2">
+            {activeFilters.map((chip) => (
+              <span
+                key={chip}
+                className="inline-flex items-center gap-2 rounded-full bg-pink-50 px-3 py-1 text-xs font-semibold text-pink-700 ring-1 ring-pink-100"
+              >
+                {chip}
+              </span>
+            ))}
           </div>
+        )}
 
-          <div>
-            <label className="font-semibold">Prescription</label>
-            <select
-              className="select select-bordered w-full mt-1"
-              value={prescriptionFilter}
-              onChange={(e) => setPrescriptionFilter(e.target.value)}
-            >
-              <option value="">All</option>
-              <option value="yes">Required</option>
-              <option value="no">Not Required</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="font-semibold">Stock</label>
-            <select
-              className="select select-bordered w-full mt-1"
-              value={stockFilter}
-              onChange={(e) => setStockFilter(e.target.value)}
-            >
-              <option value="">All</option>
-              <option value="in">In Stock</option>
-              <option value="out">Out of Stock</option>
-            </select>
-          </div>
-        </div> */}
-
-        {/* Products Grid */}
-        <div className="lg:w-3/4 w-full mx-auto">
-          <div className="grid grid-cols-1  sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {selectedProducts.length === 0 ? (
-              <p className="text-center col-span-full text-gray-500">
-                No products found
-              </p>
-            ) : (
-              selectedProducts.map((p) => (
-                <div
-                  key={p._id}
-                  className="bg-white relative rounded-2xl shadow-md hover:shadow-xl transition p-4 flex flex-col justify-between"
-                >
-                  <span className="inline-flex absolute items-center rounded-md bg-red-50 px-2 py-1 text-xs font-medium text-red-700 ring-1 ring-inset ring-red-600/10">
-                    {p.discount}%
-                  </span>
-                  <Image
-                    src={p.image}
-                    alt={p.name}
-                    width={200}
-                    height={200}
-                    className="rounded-xl mx-auto"
-                    unoptimized
-                  />
-                  <div className="mt-4 ">
-                    <div className="flex items-center justify-between">
-                      <h3 className="font-bold text-lg">{p.name}</h3>
-                      {p.requiredPrescription && (
-                        <span className="bg-black text-white text-xs px-2 py-0.5 rounded">
-                          Prescription
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-sm text-gray-600 mb-1">
-                      {p.description}
-                    </p>
-                    <p className="font-bold text-green-600 mb-1">${p.price}</p>
-                    {/* <span className="inline-flex items-center rounded-md bg-red-50 px-2 py-1 text-xs font-medium text-red-700 ring-1 ring-inset ring-red-600/10">Badge</span> */}
-                    <div className="text-xs flex justify-between items-center mt-2">
-                      <span className="text-gray-500">
-                        {p.manufacturer?.name}
-                      </span>
-                      <span
-                        className={`rounded-full text-white text-xs px-2 py-0.5 ${
-                          p.inStock ? "bg-green-600" : "bg-red-500"
-                        }`}
-                      >
-                        {p.inStock ? "In Stock" : "Out of Stock"}
-                      </span>
-                    </div>
-                  </div>
-                  <Link
-                    href={`/products/${p._id}`}
-                    className="mt-3 inline-block text-center bg-black text-white py-2 rounded-lg hover:bg-gray-800"
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[320px_1fr]">
+          <div className="space-y-4">
+            <div className="rounded-2xl bg-white/90 p-4 shadow-sm ring-1 ring-gray-100">
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-semibold text-gray-800">Filters</h3>
+                {(categoryFilter ||
+                  formFilter ||
+                  prescriptionFilter ||
+                  stockFilter ||
+                  minPrice ||
+                  maxPrice ||
+                  minRating ||
+                  brandFilterLocal) && (
+                  <button
+                    onClick={clearFilters}
+                    className="text-xs text-pink-600 hover:text-pink-700"
                   >
-                    View Details
-                  </Link>
+                    Reset
+                  </button>
+                )}
+              </div>
+
+              <div className="mt-3 space-y-3">
+                <label className="text-xs font-semibold text-gray-600">Brand</label>
+                <input
+                  type="text"
+                  value={brandFilterLocal || brandFilter || ""}
+                  onChange={(e) => setBrandFilterLocal(e.target.value)}
+                  className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-pink-200"
+                  placeholder="e.g. Nivea"
+                />
+
+                <label className="text-xs font-semibold text-gray-600">Category</label>
+                <select
+                  value={categoryFilter || categoryQuery || ""}
+                  onChange={(e) => setCategoryFilter(e.target.value)}
+                  className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-pink-200"
+                >
+                  <option value="">All</option>
+                  {categories.map((cat) => (
+                    <option key={cat} value={cat}>
+                      {cat}
+                    </option>
+                  ))}
+                </select>
+
+                <label className="text-xs font-semibold text-gray-600">Form</label>
+                <select
+                  value={formFilter}
+                  onChange={(e) => setFormFilter(e.target.value)}
+                  className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-pink-200"
+                >
+                  <option value="">All</option>
+                  {forms.map((form) => (
+                    <option key={form} value={form}>
+                      {form}
+                    </option>
+                  ))}
+                </select>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="text-xs font-semibold text-gray-600">Min price</label>
+                    <input
+                      type="number"
+                      value={minPrice}
+                      onChange={(e) => setMinPrice(e.target.value)}
+                      className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-pink-200"
+                      placeholder="0"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-semibold text-gray-600">Max price</label>
+                    <input
+                      type="number"
+                      value={maxPrice}
+                      onChange={(e) => setMaxPrice(e.target.value)}
+                      className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-pink-200"
+                      placeholder="500"
+                    />
+                  </div>
                 </div>
-              ))
+
+                <label className="text-xs font-semibold text-gray-600">Minimum rating</label>
+                <input
+                  type="number"
+                  min={1}
+                  max={5}
+                  step="0.5"
+                  value={minRating}
+                  onChange={(e) => setMinRating(e.target.value)}
+                  className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-pink-200"
+                  placeholder="e.g. 4"
+                />
+
+                <label className="text-xs font-semibold text-gray-600">Availability</label>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    onClick={() => setStockFilter(stockFilter === "in" ? "" : "in")}
+                    className={`rounded-xl border px-3 py-2 text-sm ${
+                      stockFilter === "in"
+                        ? "border-pink-300 bg-pink-50 text-pink-700"
+                        : "border-gray-200 text-gray-700"
+                    }`}
+                  >
+                    In stock
+                  </button>
+                  <button
+                    onClick={() => setStockFilter(stockFilter === "out" ? "" : "out")}
+                    className={`rounded-xl border px-3 py-2 text-sm ${
+                      stockFilter === "out"
+                        ? "border-pink-300 bg-pink-50 text-pink-700"
+                        : "border-gray-200 text-gray-700"
+                    }`}
+                  >
+                    Out
+                  </button>
+                </div>
+
+                <label className="text-xs font-semibold text-gray-600">Prescription</label>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    onClick={() =>
+                      setPrescriptionFilter(prescriptionFilter === "yes" ? "" : "yes")
+                    }
+                    className={`rounded-xl border px-3 py-2 text-sm ${
+                      prescriptionFilter === "yes"
+                        ? "border-pink-300 bg-pink-50 text-pink-700"
+                        : "border-gray-200 text-gray-700"
+                    }`}
+                  >
+                    Required
+                  </button>
+                  <button
+                    onClick={() => setPrescriptionFilter(prescriptionFilter === "no" ? "" : "no")}
+                    className={`rounded-xl border px-3 py-2 text-sm ${
+                      prescriptionFilter === "no"
+                        ? "border-pink-300 bg-pink-50 text-pink-700"
+                        : "border-gray-200 text-gray-700"
+                    }`}
+                  >
+                    Not required
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-5">
+              {initialLoading ? (
+                Array.from({ length: 6 }).map((_, idx) => (
+                  <div
+                    key={idx}
+                    className="h-64 rounded-2xl bg-gray-50 shadow-inner animate-pulse"
+                  />
+                ))
+              ) : products.length === 0 ? (
+                <p className="text-center col-span-full text-gray-500">No products found</p>
+              ) : (
+                products.map((p) => (
+                  <div
+                    key={p._id}
+                    className="group relative flex flex-col rounded-2xl bg-white/90 p-4 shadow-md ring-1 ring-gray-100 transition hover:-translate-y-1 hover:shadow-xl"
+                  >
+                    {p.discount ? (
+                      <span className="absolute left-3 top-3 inline-flex items-center rounded-full bg-rose-50 px-3 py-1 text-[11px] font-semibold text-rose-700 ring-1 ring-rose-100">
+                        {p.discount}% off
+                      </span>
+                    ) : null}
+                    <div className="flex justify-center">
+                      <Image
+                        src={p.image}
+                        alt={p.name}
+                        width={220}
+                        height={220}
+                        className="rounded-xl object-cover"
+                        unoptimized
+                      />
+                    </div>
+                    <div className="mt-3 space-y-2">
+                      <div className="flex items-start justify-between gap-2">
+                        <h3 className="text-lg font-semibold text-gray-900 line-clamp-2">
+                          {p.name}
+                        </h3>
+                        {p.requiredPrescription && (
+                          <span className="rounded-full bg-gray-900 px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-white">
+                            Rx
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2 text-xs text-amber-500">
+                        <StarRating rating={p.rating || 0} />
+                        <span className="text-gray-600">
+                          {p.rating ? p.rating.toFixed(1) : "New"}
+                        </span>
+                      </div>
+                      <p className="text-sm text-gray-600 line-clamp-2">{p.description}</p>
+                      <div className="flex items-center justify-between">
+                        <p className="text-xl font-bold text-pink-700">${p.price}</p>
+                        <span
+                          className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                            p.inStock
+                              ? "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100"
+                              : "bg-rose-50 text-rose-700 ring-1 ring-rose-100"
+                          }`}
+                        >
+                          {p.inStock ? "In stock" : "Out of stock"}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between text-xs text-gray-500">
+                        <span className="uppercase tracking-wide">{p.category}</span>
+                        <span>{p.manufacturer?.name}</span>
+                      </div>
+                    </div>
+                    <Link
+                      href={`/products/${p._id}`}
+                      className="mt-3 inline-flex items-center justify-center rounded-full bg-pink-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-pink-200 transition hover:-translate-y-0.5 hover:bg-pink-700"
+                    >
+                      View details
+                    </Link>
+                  </div>
+                ))
+              )}
+            </div>
+
+            {meta.totalPages > 1 && (
+              <div className="flex items-center justify-between">
+                <p className="text-sm text-gray-600">
+                  Page {meta.page} of {meta.totalPages}
+                </p>
+                <div className="flex gap-3">
+                  <button
+                    className="rounded-full border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-700 disabled:opacity-50"
+                    disabled={page === 1}
+                    onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
+                  >
+                    Previous
+                  </button>
+                  <button
+                    className="rounded-full border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-700 disabled:opacity-50"
+                    disabled={page === meta.totalPages}
+                    onClick={() => setPage((prev) => Math.min(prev + 1, meta.totalPages))}
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
             )}
           </div>
-
-          {totalPages > 1 && (
-            <div className="flex justify-center mt-6 space-x-4">
-              <button
-                className="btn btn-outline"
-                disabled={currentPage === 1}
-                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-              >
-                Previous
-              </button>
-              <span className="py-2 px-4">
-                Page {currentPage} of {totalPages}
-              </span>
-              <button
-                className="btn btn-outline"
-                disabled={currentPage === totalPages}
-                onClick={() =>
-                  setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-                }
-              >
-                Next
-              </button>
-            </div>
-          )}
         </div>
       </div>
     </div>

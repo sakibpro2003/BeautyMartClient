@@ -6,17 +6,17 @@ import { TProduct } from "@/types/product";
 import { cookies } from "next/headers";
 import { toast } from "react-toastify";
 
-export const getAllProducts = async () => {
+export const getAllProducts = async (queryString?: string) => {
   try {
-    const res = await fetch(
-      `${process.env.NEXT_PUBLIC_BASE_API}/api/products`,
-      {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      }
-    );
+    const url = queryString
+      ? `${process.env.NEXT_PUBLIC_BASE_API}/api/products?${queryString}`
+      : `${process.env.NEXT_PUBLIC_BASE_API}/api/products`;
+    const res = await fetch(url, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
     return res.json();
   } catch (err: any) {
     toast.error(err.message);

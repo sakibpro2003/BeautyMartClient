@@ -23,10 +23,13 @@ export const registerUser = async (userData: FieldValues) => {
     toast.error(err.message);
   }
 };
-export const getAllProducts = async () => {
+export const getAllProducts = async (queryString?: string) => {
   try {
+    const url = queryString
+      ? `${process.env.NEXT_PUBLIC_BASE_API}/api/products?${queryString}`
+      : `${process.env.NEXT_PUBLIC_BASE_API}/api/products`;
     const res = await fetch(
-      `${process.env.NEXT_PUBLIC_BASE_API}/api/products`,
+      url,
       {
         method: "GET",
         headers: {
