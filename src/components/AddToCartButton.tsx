@@ -3,6 +3,7 @@
 
 import { addToCart } from "@/services/Cart";
 import { Loader2 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "react-toastify";
 
@@ -14,6 +15,7 @@ const AddToCartButton = ({
   inStock?: boolean;
 }) => {
   const [loading, setLoading] = useState(false);
+  const router = useRouter();
 
   const handleAddToCart = async () => {
     if (!inStock) {
@@ -24,6 +26,11 @@ const AddToCartButton = ({
     setLoading(true);
     try {
       const res = await addToCart({ quantity: 1, product: productId });
+      if (res?.unauthorized) {
+        toast.error("Please log in to add items to your cart.");
+        router.push("/login");
+        return;
+      }
       if (res?.success) toast.success("Added to cart!");
       else toast.error("Failed to add.");
     } catch (err: any) {

@@ -9,26 +9,17 @@ import {
   getCartProducts,
   increaseItemQuantity,
   removeItem,
-  uploadProductImage,
 } from "@/services/Cart";
-import { createOrder } from "@/services/Orders";
-import { TOrder } from "@/types/order";
 import Image from "next/image";
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 
 const CartPage = () => {
   const [products, setProducts] = useState<any[]>([]);
-  const [isCheckoutModalOpen, setIsCheckoutModalOpen] = useState(false);
-  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [address, setAddress] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("Bkash");
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [isLoading, setIsLoading] = useState(false);
-  const [uploading, setUploading] = useState(false);
   const [confirmingOrder, setConfirmingOrder] = useState(false);
 
   const fetchCartProducts = async () => {
@@ -72,71 +63,43 @@ const CartPage = () => {
     setIsLoading(false);
   };
 
-  // const handleOpenUploadModal = (itemId: string) => {
-  //   setSelectedItemId(itemId);
-  //   setIsUploadModalOpen(true);
-  // };
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
-      setSelectedFile(e.target.files[0]);
-    }
-  };
-
-  const handleUploadPrescription = async () => {
-    if (!selectedFile || !selectedItemId) return;
-    setUploading(true);
-    const res = await uploadProductImage(selectedItemId, selectedFile);
-    console.log(res, "upload image");
-    if (res.message === "Product image updated successfully") {
-      toast.success("Prescription uploaded successfully");
-    }
-    setUploading(false);
-    setIsUploadModalOpen(false);
-    setSelectedFile(null);
-  };
-
   const handleConfirmOrder = async () => {
     try {
       setConfirmingOrder(true);
       if (products.length === 0) {
         toast.error("Your cart is empty!");
+        setConfirmingOrder(false);
         return;
       }
 
-      const newOrder: TOrder = {
-        _id: "",
-        user: { _id: "", name: "" },
-        products: products.map((item) => ({
-          product: {
-            _id: item.product._id,
-            name: item.product.name,
-            image: item.product.image,
-          },
-          quantity: item.quantity,
-          totalPrice: item.product.price * item.quantity,
-          _id: item._id,
-        })),
-        address,
-        paymentMethod,
-        totalAmount: products.reduce(
-          (total, item) => total + item.product.price * item.quantity,
-          0
-        ),
-        status: "processing",
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
+      const items = products.map((item) => ({
+        name: item.product.name,
+        price: item.product.price,
+        quantity: item.quantity,
+        image: item.product.image,
+      }));
 
-      const res = await createOrder(newOrder);
-      if (!res.success) {
-        toast.error(res.message);
-        return;
+      const origin = typeof window !== "undefined" ? window.location.origin : "";
+
+      const res = await fetch("/api/create-checkout-session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          items,
+          address,
+          paymentMethod,
+          successUrl: `${origin}/cart?status=success`,
+          cancelUrl: `${origin}/cart?status=cancelled`,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok || !data?.url) {
+        throw new Error(data?.message || "Unable to start payment.");
       }
 
-      toast.success("Order placed successfully!");
-      setIsCheckoutModalOpen(false);
-      fetchCartProducts();
+      window.location.href = data.url;
     } catch (err: any) {
       toast.error(err.message);
     } finally {
@@ -144,187 +107,178 @@ const CartPage = () => {
     }
   };
 
+  const subtotal = products.reduce(
+    (total, item) => total + item.product.price * item.quantity,
+    0,
+  );
+  const totalItems = products.reduce((total, item) => total + item.quantity, 0);
+
   return (
-    <div className="container mx-auto p-6 h-screen">
-      <div className="flex justify-between">
-        <h1 className="lg:text-2xl font-bold mb-4">Cart Products</h1>
-        <Button
-          onClick={() => setIsCheckoutModalOpen(true)}
-          className=" bg-pink-600 hover:bg-pink-700 text-white"
-        >
-          Proceed to Checkout
-        </Button>
-      </div>
+    <div className="min-h-screen bg-gradient-to-br from-amber-50 via-white to-pink-50 py-10">
+      {isLoading && <Loader />}
+      <div className="mx-auto flex w-11/12 max-w-6xl flex-col gap-8">
+        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <div className="space-y-2">
+            <p className="text-xs uppercase tracking-[0.25em] text-pink-500">Your bag</p>
+            <h1 className="text-3xl font-bold text-gray-900">Review your cart</h1>
+            <p className="text-sm text-gray-600">
+              {totalItems} item{totalItems === 1 ? "" : "s"} • ${subtotal.toFixed(2)}
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-3 text-xs font-semibold text-gray-600">
+            <span className="rounded-full bg-white px-3 py-1 ring-1 ring-gray-200">
+              Secure checkout
+            </span>
+            <span className="rounded-full bg-white px-3 py-1 ring-1 ring-gray-200">
+              Free returns within 30 days
+            </span>
+          </div>
+        </div>
 
-      {isLoading && <Loader></Loader>}
-
-      <div className="overflow-x-auto">
-        <table className="min-w-full border mt-4">
-          <thead>
-            <tr className="bg-pink-600 text-white">
-              <th className="border px-4 py-2">Image</th>
-              <th className="border px-4 py-2">Name</th>
-              <th className="border px-4 py-2">Price</th>
-              <th className="border px-4 py-2">Quantity</th>
-              <th className="border px-4 py-2">Total Price</th>
-              <th className="border px-4 py-2">In Stock</th>
-              <th className="border px-4 py-2">Prescription Required</th>
-              <th className="border px-4 py-2">Remove Item</th>
-              {/* <th className="border px-4 py-2">Upload Prescription</th> */}
-            </tr>
-          </thead>
-          <tbody>
-            {products.length > 0 ? (
-              products.map((item) => (
-                <tr key={item._id} className="text-center">
-                  <td className="border px-4 py-2">
-                    <Image
-                      width={50}
-                      height={50}
-                      src={item.product.image}
-                      alt={item.product.name}
-                      className="w-16 h-16 object-cover rounded"
-                      unoptimized
-                    />
-                  </td>
-                  <td className="border px-4 py-2">{item.product.name}</td>
-                  <td className="border px-4 py-2">${item.product.price}</td>
-                  <td className="border px-4  py-2">
-                    <Button
-                      onClick={() => handleDecrease(item?.product?._id)}
-                      className="bg-pink-600 text-white"
-                    >
-                      -
-                    </Button>
-                    <span className="m-3">{item.quantity}</span>
-                    <Button
-                      onClick={() => handleIncrease(item?.product?._id)}
-                      className="bg-pink-600 text-white"
-                    >
-                      +
-                    </Button>
-                  </td>
-                  <td className="border px-4 py-2">
-                    ${item.product.price * item.quantity}
-                  </td>
-                  <td className="border px-4 py-2">
-                    {item.product.inStock ? "Yes" : "No"}
-                  </td>
-                  <td className="border px-4 py-2">
-                    {item.product.requiredPrescription ? "Yes" : "No"}
-                  </td>
-                  <td className="border px-4 py-2">
-                    <Button
-                      onClick={() => handleRemoveItem(item._id)}
-                      className="bg-pink-600 text-white hover:bg-pink-700"
-                    >
-                      Remove
-                    </Button>
-                  </td>
-                  {/* <td>
-                    <button
-                      onClick={() => handleOpenUploadModal(item._id)}
-                      className="btn-custom"
-                    >
-                      Upload
-                    </button>
-                  </td> */}
-                </tr>
-              ))
+        <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
+          <div className="space-y-4">
+            {products.length === 0 ? (
+              <div className="rounded-3xl bg-white/90 p-10 text-center shadow-sm ring-1 ring-gray-100">
+                <p className="text-lg font-semibold text-gray-700">Your cart is empty</p>
+                <p className="text-sm text-gray-500 mt-2">Add items to see them here.</p>
+              </div>
             ) : (
-              <tr>
-                <td colSpan={9} className="text-center py-4">
-                  No products in the cart
-                </td>
-              </tr>
+              products.map((item) => (
+                <div
+                  key={item._id}
+                  className="group rounded-3xl bg-white/90 p-4 shadow-sm ring-1 ring-gray-100 transition hover:-translate-y-0.5 hover:shadow-lg"
+                >
+                  <div className="flex flex-col gap-4 md:flex-row md:items-center">
+                    <div className="flex items-center gap-4 md:w-2/5">
+                      <div className="relative h-24 w-24 overflow-hidden rounded-2xl bg-gradient-to-br from-pink-50 via-white to-amber-50 ring-1 ring-pink-100/70">
+                        <Image
+                          src={item.product.image}
+                          alt={item.product.name}
+                          fill
+                          className="object-contain"
+                          sizes="120px"
+                          unoptimized
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <p className="text-base font-semibold text-gray-900">
+                          {item.product.name}
+                        </p>
+                        <p className="text-sm text-gray-600">${item.product.price}</p>
+                        <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+                          {item.product.inStock ? "In stock" : "Out of stock"}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-1 flex-wrap items-center justify-between gap-4">
+                      <div className="flex items-center gap-3">
+                        <Button
+                          onClick={() => handleDecrease(item?.product?._id)}
+                          className="h-9 w-9 rounded-full bg-gray-100 text-gray-700 hover:bg-gray-200"
+                        >
+                          -
+                        </Button>
+                        <span className="text-sm font-semibold text-gray-900">{item.quantity}</span>
+                        <Button
+                          onClick={() => handleIncrease(item?.product?._id)}
+                          className="h-9 w-9 rounded-full bg-gray-900 text-white hover:bg-gray-800"
+                        >
+                          +
+                        </Button>
+                      </div>
+
+                      <div className="text-right">
+                        <p className="text-sm text-gray-500">Total</p>
+                        <p className="text-lg font-bold text-gray-900">
+                          ${(item.product.price * item.quantity).toFixed(2)}
+                        </p>
+                      </div>
+
+                      <Button
+                        variant="ghost"
+                        className="text-sm font-semibold text-rose-600 hover:text-rose-700"
+                        onClick={() => handleRemoveItem(item._id)}
+                      >
+                        Remove
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              ))
             )}
-          </tbody>
-        </table>
-      </div>
+          </div>
 
-      {/* Checkout Modal */}
-      {isCheckoutModalOpen && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white p-6 rounded-lg w-96">
-            <h2 className="text-xl font-bold mb-4">Checkout</h2>
-            <label className="block text-sm font-medium mb-1">Address</label>
-            <input
-              type="text"
-              className="input input-bordered w-full mb-4"
-              placeholder="Enter your address"
-              value={address}
-              onChange={(e) => setAddress(e.target.value)}
-            />
-            <label className="block text-sm font-medium mb-1">
-              Payment Method
-            </label>
-            <select
-              className="select select-bordered w-full mb-4"
-              value={paymentMethod}
-              onChange={(e) => setPaymentMethod(e.target.value)}
-            >
-              <option value="Bkash">Bkash</option>
-              <option value="Nagad">Nagad</option>
-              <option value="COD">Cash on Delivery</option>
-              <option value="Card">Credit/Debit Card</option>
-            </select>
-            <div className="flex justify-between mt-4">
-              <button
-                className="btn btn-error"
-                onClick={() => setIsCheckoutModalOpen(false)}
-              >
-                Cancel
-              </button>
-              <button
-                className="btn btn-success"
+          <div className="space-y-4">
+            <div className="rounded-3xl bg-white p-6 shadow-[0_18px_60px_rgba(0,0,0,0.05)] ring-1 ring-gray-100">
+              <h3 className="text-lg font-bold text-gray-900">Order summary</h3>
+              <div className="mt-4 space-y-3 text-sm text-gray-700">
+                <div className="flex items-center justify-between">
+                  <span>Subtotal</span>
+                  <span className="font-semibold">${subtotal.toFixed(2)}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span>Shipping</span>
+                  <span className="font-semibold text-emerald-600">Free</span>
+                </div>
+                <div className="flex items-center justify-between text-base font-bold text-gray-900">
+                  <span>Total</span>
+                  <span>${subtotal.toFixed(2)}</span>
+                </div>
+              </div>
+
+              <div className="mt-6 space-y-3">
+                <label className="text-xs font-semibold uppercase text-gray-500">
+                  Delivery address
+                </label>
+                <input
+                  type="text"
+                  className="w-full rounded-xl border border-gray-200 px-3 py-3 text-sm shadow-sm focus:border-pink-400 focus:ring-pink-300"
+                  placeholder="Enter your address"
+                  value={address}
+                  onChange={(e) => setAddress(e.target.value)}
+                />
+              </div>
+
+              <div className="mt-4 space-y-3">
+                <label className="text-xs font-semibold uppercase text-gray-500">
+                  Payment method
+                </label>
+                <select
+                  className="w-full rounded-xl border border-gray-200 px-3 py-3 text-sm shadow-sm focus:border-pink-400 focus:ring-pink-300"
+                  value={paymentMethod}
+                  onChange={(e) => setPaymentMethod(e.target.value)}
+                >
+                  <option value="Bkash">Bkash</option>
+                  <option value="Nagad">Nagad</option>
+                  <option value="COD">Cash on Delivery</option>
+                  <option value="Card">Credit/Debit Card</option>
+                </select>
+              </div>
+
+              <Button
                 onClick={handleConfirmOrder}
-                disabled={confirmingOrder}
+                disabled={confirmingOrder || products.length === 0}
+                className="mt-6 w-full rounded-xl bg-gradient-to-r from-pink-600 to-orange-500 py-3 text-sm font-semibold text-white shadow-lg shadow-pink-200/60 transition hover:-translate-y-0.5 hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-60"
               >
-                {confirmingOrder ? "Processing..." : "Confirm"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+                {confirmingOrder ? "Processing..." : "Proceed to payment"}
+              </Button>
 
-      {/* Upload Prescription Modal */}
-      {isUploadModalOpen && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white p-6 rounded-lg w-96">
-            <h2 className="text-xl font-bold mb-4">Upload Prescription</h2>
-            <div className="mb-4">
-              <label className="block text-sm font-medium mb-2">
-                Select Prescription Image
-              </label>
-              <input
-                type="file"
-                ref={fileInputRef}
-                onChange={handleFileChange}
-                accept="image/*"
-                className="file-input file-input-bordered w-full"
-              />
+              <p className="mt-3 text-center text-xs text-gray-500">
+                Secure payment powered by Stripe
+              </p>
             </div>
-            <div className="flex justify-between mt-4">
-              <button
-                className="btn btn-error"
-                onClick={() => {
-                  setIsUploadModalOpen(false);
-                  setSelectedFile(null);
-                }}
-              >
-                Cancel
-              </button>
-              <button
-                className="btn btn-success"
-                onClick={handleUploadPrescription}
-                disabled={!selectedFile || uploading}
-              >
-                {uploading ? "Uploading..." : "Upload"}
-              </button>
+
+            <div className="rounded-2xl bg-white/80 p-4 ring-1 ring-pink-100 text-sm text-pink-700 shadow-inner">
+              <p className="font-semibold">Need help?</p>
+              <p className="text-pink-700/80">
+                Our support team is here for you 24/7. Reach out if you have any issues with your
+                order or payment.
+              </p>
             </div>
           </div>
         </div>
-      )}
+      </div>
     </div>
   );
 };

@@ -42,7 +42,6 @@ const ProductCard = () => {
   const [sortOption, setSortOption] = useState("newest");
   const [categoryFilter, setCategoryFilter] = useState("");
   const [formFilter, setFormFilter] = useState("");
-  const [prescriptionFilter, setPrescriptionFilter] = useState("");
   const [stockFilter, setStockFilter] = useState("");
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
@@ -62,8 +61,6 @@ const ProductCard = () => {
     const effectiveCategory = categoryQuery || categoryFilter;
     if (effectiveCategory) params.set("category", effectiveCategory);
     if (formFilter) params.set("form", formFilter);
-    if (prescriptionFilter)
-      params.set("requiredPrescription", prescriptionFilter === "yes" ? "true" : "false");
     if (stockFilter) params.set("inStock", stockFilter === "in" ? "true" : "false");
     const effectiveBrand = brandFilter || brandFilterLocal;
     if (effectiveBrand) params.set("brand", effectiveBrand);
@@ -99,7 +96,6 @@ const ProductCard = () => {
     categoryFilter,
     categoryQuery,
     formFilter,
-    prescriptionFilter,
     stockFilter,
     minPrice,
     maxPrice,
@@ -119,7 +115,6 @@ const ProductCard = () => {
     if (maxPrice) chips.push(`Max $${maxPrice}`);
     if (minRating) chips.push(`Rating ≥ ${minRating}`);
     if (stockFilter) chips.push(stockFilter === "in" ? "In stock" : "Out of stock");
-    if (prescriptionFilter) chips.push(prescriptionFilter === "yes" ? "Rx required" : "No Rx");
     return chips;
   }, [
     searchQuery,
@@ -131,8 +126,7 @@ const ProductCard = () => {
     minPrice,
     maxPrice,
     minRating,
-    stockFilter,
-    prescriptionFilter,
+    stockFilter
   ]);
 
   useEffect(() => {
@@ -142,7 +136,6 @@ const ProductCard = () => {
     categoryFilter,
     categoryQuery,
     formFilter,
-    prescriptionFilter,
     stockFilter,
     minPrice,
     maxPrice,
@@ -182,7 +175,6 @@ const ProductCard = () => {
     setSearchQuery("");
     setCategoryFilter("");
     setFormFilter("");
-    setPrescriptionFilter("");
     setStockFilter("");
     setMinPrice("");
     setMaxPrice("");
@@ -257,7 +249,6 @@ const ProductCard = () => {
                 <h3 className="text-sm font-semibold text-gray-800">Filters</h3>
                 {(categoryFilter ||
                   formFilter ||
-                  prescriptionFilter ||
                   stockFilter ||
                   minPrice ||
                   maxPrice ||
@@ -368,32 +359,6 @@ const ProductCard = () => {
                     Out
                   </button>
                 </div>
-
-                <label className="text-xs font-semibold text-gray-600">Prescription</label>
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    onClick={() =>
-                      setPrescriptionFilter(prescriptionFilter === "yes" ? "" : "yes")
-                    }
-                    className={`rounded-xl border px-3 py-2 text-sm ${
-                      prescriptionFilter === "yes"
-                        ? "border-pink-300 bg-pink-50 text-pink-700"
-                        : "border-gray-200 text-gray-700"
-                    }`}
-                  >
-                    Required
-                  </button>
-                  <button
-                    onClick={() => setPrescriptionFilter(prescriptionFilter === "no" ? "" : "no")}
-                    className={`rounded-xl border px-3 py-2 text-sm ${
-                      prescriptionFilter === "no"
-                        ? "border-pink-300 bg-pink-50 text-pink-700"
-                        : "border-gray-200 text-gray-700"
-                    }`}
-                  >
-                    Not required
-                  </button>
-                </div>
               </div>
             </div>
           </div>
@@ -442,11 +407,6 @@ const ProductCard = () => {
                           <h3 className="text-lg font-semibold text-gray-900 line-clamp-2">
                             {p.name}
                           </h3>
-                          {p.requiredPrescription && (
-                            <span className="rounded-full bg-gray-900 px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-white">
-                              Rx
-                            </span>
-                          )}
                         </div>
 
                         <div className="flex items-center gap-2 text-xs text-amber-500">

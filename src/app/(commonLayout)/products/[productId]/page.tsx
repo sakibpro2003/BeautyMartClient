@@ -9,6 +9,7 @@ import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { Loader2 } from "lucide-react";
 import Loader from "@/components/Loader";
+import { useRouter } from "next/navigation";
 
 const ProductDetails = ({
   params,
@@ -20,6 +21,7 @@ const ProductDetails = ({
   const [loading, setLoading] = useState(true);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
   const isOutOfStock = !product?.inStock || product?.quantity <= 0;
+  const router = useRouter();
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -52,6 +54,11 @@ const ProductDetails = ({
 
     try {
       const res = await addToCart(payload);
+      if (res?.unauthorized) {
+        toast.error("Please log in to add items to your cart.");
+        router.push("/login");
+        return;
+      }
       if (res?.success) {
         toast.success("Added to cart successfully!");
       } else {
@@ -85,11 +92,6 @@ const ProductDetails = ({
           <span className="rounded-full bg-pink-50 px-3 py-1 ring-1 ring-pink-100">
             {product?.category || "Beauty"}
           </span>
-          {product?.requiredPrescription && (
-            <span className="rounded-full bg-amber-100 px-3 py-1 text-amber-800 ring-1 ring-amber-200">
-              Prescription
-            </span>
-          )}
           <span
             className={`rounded-full px-3 py-1 ring-1 ${
               isOutOfStock
@@ -241,12 +243,6 @@ const ProductDetails = ({
                   <p className="text-xs font-semibold uppercase text-gray-500">Category</p>
                   <p className="text-sm font-semibold text-gray-900">
                     {product?.category || "General"}
-                  </p>
-                </div>
-                <div className="rounded-xl border border-gray-100 bg-gray-50 px-4 py-3">
-                  <p className="text-xs font-semibold uppercase text-gray-500">Prescription</p>
-                  <p className="text-sm font-semibold text-gray-900">
-                    {product?.requiredPrescription ? "Required" : "Not required"}
                   </p>
                 </div>
                 <div className="rounded-xl border border-gray-100 bg-gray-50 px-4 py-3">

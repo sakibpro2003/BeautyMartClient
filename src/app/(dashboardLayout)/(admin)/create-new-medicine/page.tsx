@@ -20,7 +20,6 @@ const ProductForm = () => {
     price: 0,
     inStock: true,
     quantity: 0,
-    requiredPrescription: false,
     expiryDate: "",
     manufacturer: {
       name: "",
@@ -145,18 +144,6 @@ const ProductForm = () => {
               <label className="text-sm font-medium">In Stock</label>
             </div>
 
-            <div className="flex items-center space-x-2">
-              <input
-                type="checkbox"
-                name="requiredPrescription"
-                checked={product.requiredPrescription}
-                onChange={handleChange}
-              />
-              <label className="text-sm font-medium">
-                Requires Prescription
-              </label>
-            </div>
-
             <div>
               <label className="block text-sm font-medium">Expiry Date</label>
               <input
@@ -263,7 +250,6 @@ export default withAdminAuth(ProductForm);
 //     price: 0,
 //     inStock: true,
 //     quantity: 0,
-//     requiredPrescription: false,
 //     expiryDate: "",
 //     manufacturer: {
 //       name: "",
@@ -328,7 +314,6 @@ export default withAdminAuth(ProductForm);
 //             <Input label="Expiry Date" name="expiryDate" type="date" value={product.expiryDate} onChange={handleChange} />
 
 //             <Checkbox label="In Stock" name="inStock" checked={product.inStock} onChange={handleChange} />
-//             <Checkbox label="Requires Prescription" name="requiredPrescription" checked={product.requiredPrescription} onChange={handleChange} />
 
 //             <Input label="Manufacturer Name" name="manufacturer.name" value={product.manufacturer.name} onChange={handleChange} />
 //             <Input label="Manufacturer Address" name="manufacturer.address" value={product.manufacturer.address} onChange={handleChange} />

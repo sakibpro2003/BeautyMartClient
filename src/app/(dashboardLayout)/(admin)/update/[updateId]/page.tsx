@@ -23,7 +23,6 @@ const UpdateProductPage = () => {
     price: 0,
     inStock: false,
     quantity: 0,
-    requiredPrescription: false,
     expiryDate: "",
     manufacturer: {
       name: "",
@@ -184,20 +183,6 @@ const UpdateProductPage = () => {
             className="checkbox checkbox-neutral"
           />
           <label className="font-semibold text-gray-700">In Stock</label>
-        </div>
-
-        {/* Requires Prescription */}
-        <div className="flex items-center gap-2">
-          <input
-            type="checkbox"
-            name="requiredPrescription"
-            checked={product?.requiredPrescription}
-            onChange={handleChange}
-            className="checkbox checkbox-primary"
-          />
-          <label className="font-semibold text-gray-700">
-            Requires Prescription
-          </label>
         </div>
 
         {/* Manufacturer Name */}

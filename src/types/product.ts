@@ -18,7 +18,6 @@ export type TManufacturer = {
     price: number;
     inStock: boolean;
     quantity: number;
-    requiredPrescription: boolean;
     expiryDate: string; 
     manufacturer: TManufacturer;
     updated_at: string; 

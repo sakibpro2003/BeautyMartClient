@@ -11,7 +11,6 @@ export type TCart = {
   price?: number;
   inStock?: boolean;
   quantity?: number;
-  requiredPrescription?: boolean;
   expiryDate?: string;
 
   manufacturer?: {
@@ -25,6 +24,9 @@ export type TCart = {
 
 export const addToCart = async (payload:TCart) => {
   const token = (await cookies()).get("accessToken")?.value;
+  if (!token) {
+    return { success: false, unauthorized: true, message: "Please log in" };
+  }
   try {
     const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_API}/api/cart`, {
       method: "POST",
@@ -34,9 +36,14 @@ export const addToCart = async (payload:TCart) => {
       },
       body: JSON.stringify(payload),
     });
-    return res.json();
+    const data = await res.json();
+    if (res.status === 401 || res.status === 403) {
+      return { ...data, success: false, unauthorized: true };
+    }
+    return data;
   } catch (err: any) {
-   console.log(err)
+   console.log(err);
+   return { success: false, message: "Failed to add to cart" };
   }
 };
 
