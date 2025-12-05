@@ -1,12 +1,13 @@
 "use client";
 
-import React from "react";
+import React, { useMemo } from "react";
 import { useUser } from "@/context/UserContext";
 import { usePathname, useRouter } from "next/navigation";
 import { logout } from "@/services/AuthService";
 import Link from "next/link";
 import clsx from "clsx";
 import Image from "next/image";
+import { Heart } from "lucide-react";
 import capsuleImg from "../capsule.png";
 
 const Navbar = () => {
@@ -15,6 +16,28 @@ const Navbar = () => {
   const pathname = usePathname();
 
   const userRole = user?.role;
+
+  const isCustomer = userRole === "customer";
+
+  const navLinks = useMemo(
+    () => [
+      { href: "/", label: "Home" },
+      { href: "/products", label: "Products" },
+      { href: "/about", label: "About" },
+      { href: "/blog", label: "Blog" },
+      { href: "/cart", label: "Cart" },
+      ...(isCustomer
+        ? [
+            { href: "/wishlist", label: "Wishlist" },
+            { href: "/my-orders", label: "Dashboard" },
+          ]
+        : []),
+      ...(userRole === "admin"
+        ? [{ href: "/manage-medicines", label: "Admin" }]
+        : []),
+    ],
+    [isCustomer, userRole]
+  );
 
   const handleLogout = () => {
     logout();
@@ -55,52 +78,26 @@ const Navbar = () => {
 
         {/* Menu */}
         <ul className="hidden lg:flex items-center gap-6">
-          <li>
-            <Link href="/" className={getLinkClass("/")}>
-              Home
-            </Link>
-          </li>
-          <li>
-            <Link href="/products" className={getLinkClass("/products")}>
-              Products
-            </Link>
-          </li>
-          <li>
-            <Link href="/about" className={getLinkClass("/about")}>
-              About
-            </Link>
-          </li>
-          <li>
-            <Link href="/blog" className={getLinkClass("/blog")}>
-              Blog
-            </Link>
-          </li>
-          <li>
-            <Link href="/cart" className={getLinkClass("/cart")}>
-              Cart
-            </Link>
-          </li>
-          {userRole === "customer" && (
-            <li>
-              <Link href="/my-orders" className={getLinkClass("/my-orders")}>
-                Dashboard
+          {navLinks.map((link) => (
+            <li key={link.href}>
+              <Link href={link.href} className={getLinkClass(link.href)}>
+                {link.label}
               </Link>
             </li>
-          )}
-          {userRole === "admin" && (
-            <li>
-              <Link
-                href="/manage-medicines"
-                className={getLinkClass("/manage-medicines")}
-              >
-                Admin
-              </Link>
-            </li>
-          )}
+          ))}
         </ul>
 
         {/* Auth Buttons */}
         <div className="flex items-center gap-4">
+          {isCustomer ? (
+            <Link
+              href="/wishlist"
+              className="hidden items-center gap-2 rounded-full border border-pink-200 px-4 py-2 text-sm font-semibold text-pink-700 shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg lg:inline-flex"
+            >
+              <Heart size={16} /> Wishlist
+            </Link>
+          ) : null}
+
           {user ? (
             <button
               onClick={handleLogout}

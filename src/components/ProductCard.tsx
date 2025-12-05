@@ -3,11 +3,14 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { getAllProducts } from "@/services/AuthService";
+import { fetchWishlist, addToWishlist, removeFromWishlist } from "@/services/Wishlist";
 import Image from "next/image";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { StarRating } from "./StarRating";
 import { formatBDT } from "@/utils/currency";
+import { Heart } from "lucide-react";
+import { toast } from "react-toastify";
 
 const limit = 8;
 const sortOptions = [
@@ -59,6 +62,7 @@ const ProductCard = () => {
   const [maxPrice, setMaxPrice] = useState("");
   const [minRating, setMinRating] = useState("");
   const [brandFilterLocal, setBrandFilterLocal] = useState("");
+  const [wishlistIds, setWishlistIds] = useState<string[]>([]);
 
   const searchParams = useSearchParams();
   const brandFilter = searchParams.get("brand");
@@ -182,6 +186,48 @@ const ProductCard = () => {
 
     fetchProducts();
   }, [queryString]);
+
+  useEffect(() => {
+    const loadWishlist = async () => {
+      const res = await fetchWishlist();
+      if (res?.success && Array.isArray(res.data)) {
+        setWishlistIds(
+          res.data
+            .map((item: any) => item?.product?._id || item.product)
+            .filter(Boolean)
+        );
+      }
+    };
+    loadWishlist();
+  }, []);
+
+  const toggleWishlist = async (productId: string) => {
+    if (!productId) return;
+    const isSaved = wishlistIds.includes(productId);
+    if (isSaved) {
+      const res = await removeFromWishlist(productId);
+      if (res?.unauthorized) {
+        toast.error("Please login to manage your wishlist.");
+        return;
+      }
+      if (res?.success) {
+        setWishlistIds((prev) => prev.filter((id) => id !== productId));
+        toast.success("Removed from wishlist");
+      }
+      return;
+    }
+    const res = await addToWishlist(productId);
+    if (res?.unauthorized) {
+      toast.error("Please login to save favorites.");
+      return;
+    }
+    if (res?.success) {
+      setWishlistIds((prev) => [...prev, productId]);
+      toast.success("Saved to wishlist");
+    } else if (res?.message) {
+      toast.error(res.message);
+    }
+  };
 
   const clearFilters = () => {
     setSearchQuery("");
@@ -395,6 +441,17 @@ const ProductCard = () => {
                         aria-hidden
                         className="absolute inset-x-3 top-2 h-16 rounded-2xl bg-gradient-to-br from-white via-white/70 to-pink-50/70 blur-xl"
                       />
+                      <button
+                        type="button"
+                        onClick={() => toggleWishlist(p._id)}
+                        className="absolute right-4 top-4 inline-flex h-10 w-10 items-center justify-center rounded-full bg-white/80 text-pink-600 ring-1 ring-pink-100 shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg"
+                        aria-label="Save product"
+                      >
+                        <Heart
+                          size={18}
+                          className={wishlistIds.includes(p._id) ? "fill-pink-500 text-pink-500" : ""}
+                        />
+                      </button>
                       {p.discount ? (
                         <span className="absolute left-4 top-4 inline-flex items-center rounded-full bg-gradient-to-r from-rose-500 to-orange-400 px-3 py-1 text-[11px] font-semibold text-white shadow-lg shadow-rose-200/50">
                           {p.discount}% off

@@ -117,3 +117,18 @@
     @apply bg-background text-foreground;
   }
 } */
+
+@layer base {
+  select {
+    @apply appearance-none rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-semibold text-gray-800 shadow-sm transition focus:border-pink-400 focus:ring-2 focus:ring-pink-100;
+    background-image: url("data:image/svg+xml,%3Csvg width='16' height='16' xmlns='http://www.w3.org/2000/svg' fill='none' stroke='%23ec4899' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 6l4 4 4-4'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.85rem center;
+    background-size: 14px;
+    padding-right: 2.5rem;
+  }
+
+  select option {
+    @apply font-medium text-gray-800;
+  }
+}

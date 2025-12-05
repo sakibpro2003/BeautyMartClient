@@ -4,6 +4,7 @@
 import { addToCart } from "@/services/Cart";
 import { getSingleProduct } from "@/services/Products";
 import { fetchProductReviews } from "@/services/Reviews";
+import { addToWishlist, removeFromWishlist, fetchWishlist } from "@/services/Wishlist";
 import Image from "next/image";
 import React, { useEffect, useMemo, useState, use } from "react";
 import { StarRating } from "@/components/StarRating";
@@ -26,6 +27,7 @@ const ProductDetails = ({
   const [isAddingToCart, setIsAddingToCart] = useState(false);
   const [reviews, setReviews] = useState<TReview[]>([]);
   const [reviewsLoading, setReviewsLoading] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
   const isOutOfStock = !product?.inStock || product?.quantity <= 0;
   const router = useRouter();
 
@@ -55,8 +57,19 @@ const ProductDetails = ({
       }
     };
 
+    const loadWishlist = async () => {
+      const res = await fetchWishlist();
+      if (res?.success && Array.isArray(res.data)) {
+        const found = res.data.some(
+          (item: any) => item?.product?._id === productId || item?.product === productId
+        );
+        setIsSaved(found);
+      }
+    };
+
     fetchProduct();
     fetchReviews();
+    loadWishlist();
   }, [productId]);
 
   type TAddCart = {
@@ -89,6 +102,33 @@ const ProductDetails = ({
       toast.error(err.message);
     } finally {
       setIsAddingToCart(false);
+    }
+  };
+
+  const toggleWishlist = async () => {
+    if (!productId) return;
+    if (isSaved) {
+      const res = await removeFromWishlist(productId);
+      if (res?.unauthorized) {
+        toast.error("Please login to manage your wishlist.");
+        return;
+      }
+      if (res?.success) {
+        setIsSaved(false);
+        toast.success("Removed from wishlist");
+      }
+      return;
+    }
+    const res = await addToWishlist(productId);
+    if (res?.unauthorized) {
+      toast.error("Please login to save favorites.");
+      return;
+    }
+    if (res?.success) {
+      setIsSaved(true);
+      toast.success("Saved for later");
+    } else if (res?.message) {
+      toast.error(res.message);
     }
   };
 
@@ -240,24 +280,32 @@ const ProductDetails = ({
               </div>
 
               <div className="mt-5 space-y-3">
-                <button
-                  onClick={() => handleAddToCart(productId)}
-                  className={`w-full py-3 text-white text-lg font-semibold rounded-2xl transition flex justify-center items-center shadow-md ${
-                    isOutOfStock
-                      ? "bg-gray-400 cursor-not-allowed"
-                      : "bg-pink-600 hover:-translate-y-0.5 hover:shadow-lg hover:bg-pink-700"
-                  }`}
-                  disabled={isAddingToCart || isOutOfStock}
-                >
-                  {isAddingToCart ? (
-                    <>
-                      <Loader2 className="animate-spin mr-2 h-5 w-5" />
-                      Adding to Cart...
-                    </>
-                  ) : (
-                    "Add To Cart"
-                  )}
-                </button>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <button
+                    onClick={() => handleAddToCart(productId)}
+                    className={`w-full py-3 text-white text-lg font-semibold rounded-2xl transition flex justify-center items-center shadow-md ${
+                      isOutOfStock
+                        ? "bg-gray-400 cursor-not-allowed"
+                        : "bg-pink-600 hover:-translate-y-0.5 hover:shadow-lg hover:bg-pink-700"
+                    }`}
+                    disabled={isAddingToCart || isOutOfStock}
+                  >
+                    {isAddingToCart ? (
+                      <>
+                        <Loader2 className="animate-spin mr-2 h-5 w-5" />
+                        Adding to Cart...
+                      </>
+                    ) : (
+                      "Add To Cart"
+                    )}
+                  </button>
+                  <button
+                    onClick={toggleWishlist}
+                    className="w-full py-3 text-pink-600 text-lg font-semibold rounded-2xl border border-pink-200 bg-white transition flex justify-center items-center shadow-sm hover:-translate-y-0.5 hover:shadow-lg"
+                  >
+                    {isSaved ? "Saved" : "Save for later"}
+                  </button>
+                </div>
                 <div className="flex items-center justify-between text-xs text-gray-600">
                   <span className="inline-flex items-center gap-2">
                     <span className="h-2 w-2 rounded-full bg-emerald-400" />
