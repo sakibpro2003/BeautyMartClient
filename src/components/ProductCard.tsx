@@ -27,7 +27,18 @@ const categories = [
   "Men",
   "Lip",
 ];
-const forms = ["Tablet", "Syrup", "Injection", "Ointment", "Capsulec"];
+const forms = [
+  "Cream",
+  "Serum",
+  "Lotion",
+  "Cleanser",
+  "Mask",
+  "Oil",
+  "Toner",
+  "Gel",
+  "Mist",
+  "Balm",
+];
 
 const ProductCard = () => {
   const [products, setProducts] = useState<any[]>([]);
