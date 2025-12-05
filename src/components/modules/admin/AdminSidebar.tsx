@@ -14,6 +14,7 @@ import {
   Users,
   Boxes,
   FilePlus,
+  LineChart,
 } from "lucide-react";
 
 const AdminSidebar = () => {
@@ -22,6 +23,9 @@ const AdminSidebar = () => {
 
   const navItems = [
     { name: "Home", path: "/", icon: Home },
+    { name: "Analytics", path: "/analytics", icon: LineChart },
+    { name: "Inventory", path: "/inventory", icon: Boxes },
+    { name: "Promotions", path: "/promotions", icon: Package },
     { name: "Manage Products", path: "/manage-products", icon: Boxes },
     { name: "Manage Orders", path: "/manage-orders", icon: ClipboardList },
     { name: "Manage Users", path: "/manage-users", icon: Users },

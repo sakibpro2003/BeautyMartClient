@@ -21,7 +21,8 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json();
-    const { items, successUrl, cancelUrl, address, paymentMethod, customerEmail } = body;
+    const { items, successUrl, cancelUrl, address, paymentMethod, customerEmail, promoCode } =
+      body;
 
     if (!Array.isArray(items) || items.length === 0) {
       return NextResponse.json({ message: "No items provided" }, { status: 400 });
@@ -49,6 +50,7 @@ export async function POST(req: NextRequest) {
       metadata: {
         address: address || "",
         paymentMethod: paymentMethod || "card",
+        promoCode: promoCode || "",
       },
     });
 

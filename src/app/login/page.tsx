@@ -60,7 +60,7 @@ const Login = () => {
         if (token) {
           const decoded: any = jwtDecode(token);
           if (decoded?.role === "admin") {
-            redirectPath = "/manage-orders";
+            redirectPath = "/analytics";
           }
         }
         router.push(redirectPath);

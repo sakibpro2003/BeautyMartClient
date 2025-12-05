@@ -10,6 +10,7 @@ import {
   increaseItemQuantity,
   removeItem,
 } from "@/services/Cart";
+import { validatePromotion } from "@/services/Promotions";
 import Image from "next/image";
 import React, { useEffect, useState } from "react";
 import { toast } from "react-toastify";
@@ -18,6 +19,9 @@ const CartPage = () => {
   const [products, setProducts] = useState<any[]>([]);
   const [address, setAddress] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("Bkash");
+  const [promoCode, setPromoCode] = useState("");
+  const [appliedPromo, setAppliedPromo] = useState<any | null>(null);
+  const [promoMessage, setPromoMessage] = useState("");
 
   const [isLoading, setIsLoading] = useState(false);
   const [confirmingOrder, setConfirmingOrder] = useState(false);
@@ -63,6 +67,76 @@ const CartPage = () => {
     setIsLoading(false);
   };
 
+  const applyPromo = async () => {
+    const normalized = promoCode.trim().toUpperCase();
+    if (!normalized) {
+      setAppliedPromo(null);
+      setPromoMessage("Enter a code.");
+      return;
+    }
+    const res = await validatePromotion(normalized);
+    if (!res?.success) {
+      setAppliedPromo(null);
+      setPromoMessage(res?.message || "Code not found.");
+      return;
+    }
+    const promo = res.data;
+    const subtotal = products.reduce(
+      (total, item) => total + item.product.price * item.quantity,
+      0,
+    );
+    if (promo.minimumOrder && subtotal < promo.minimumOrder) {
+      setPromoMessage(`Minimum order $${promo.minimumOrder} required for this code.`);
+      setAppliedPromo(null);
+      return;
+    }
+    setAppliedPromo(promo);
+    setPromoMessage(`Applied ${promo.code}`);
+  };
+
+  const calculateDiscount = () => {
+    if (!appliedPromo) return 0;
+    const subtotal = products.reduce(
+      (total, item) => total + item.product.price * item.quantity,
+      0,
+    );
+    if (appliedPromo.discountType === "percentage") {
+      return (subtotal * appliedPromo.value) / 100;
+    }
+    return Math.min(appliedPromo.value, subtotal);
+  };
+
+  const adjustedItems = () => {
+    const discount = calculateDiscount();
+    if (!appliedPromo || discount <= 0) {
+      return products.map((item) => ({
+        name: item.product.name,
+        price: item.product.price,
+        quantity: item.quantity,
+        image: item.product.image,
+      }));
+    }
+
+    const subtotal = products.reduce(
+      (total, item) => total + item.product.price * item.quantity,
+      0,
+    );
+    const factor = subtotal > 0 ? Math.max(0, (subtotal - discount) / subtotal) : 1;
+
+    return products.map((item, idx) => {
+      const adjustedPrice = Math.max(
+        0.5,
+        Math.round(item.product.price * factor * 100) / 100
+      );
+      return {
+        name: item.product.name,
+        price: adjustedPrice,
+        quantity: item.quantity,
+        image: item.product.image,
+      };
+    });
+  };
+
   const handleConfirmOrder = async () => {
     try {
       setConfirmingOrder(true);
@@ -72,12 +146,7 @@ const CartPage = () => {
         return;
       }
 
-      const items = products.map((item) => ({
-        name: item.product.name,
-        price: item.product.price,
-        quantity: item.quantity,
-        image: item.product.image,
-      }));
+      const items = adjustedItems();
 
       const origin = typeof window !== "undefined" ? window.location.origin : "";
 
@@ -88,6 +157,7 @@ const CartPage = () => {
           items,
           address,
           paymentMethod,
+          promoCode: appliedPromo?.code || "",
           successUrl: `${origin}/cart?status=success`,
           cancelUrl: `${origin}/cart?status=cancelled`,
         }),
@@ -111,6 +181,8 @@ const CartPage = () => {
     (total, item) => total + item.product.price * item.quantity,
     0,
   );
+  const discount = calculateDiscount();
+  const total = Math.max(0, subtotal - discount);
   const totalItems = products.reduce((total, item) => total + item.quantity, 0);
 
   return (
@@ -210,7 +282,7 @@ const CartPage = () => {
           </div>
 
           <div className="space-y-4">
-            <div className="rounded-3xl bg-white p-6 shadow-[0_18px_60px_rgba(0,0,0,0.05)] ring-1 ring-gray-100">
+              <div className="rounded-3xl bg-white p-6 shadow-[0_18px_60px_rgba(0,0,0,0.05)] ring-1 ring-gray-100">
               <h3 className="text-lg font-bold text-gray-900">Order summary</h3>
               <div className="mt-4 space-y-3 text-sm text-gray-700">
                 <div className="flex items-center justify-between">
@@ -218,12 +290,51 @@ const CartPage = () => {
                   <span className="font-semibold">${subtotal.toFixed(2)}</span>
                 </div>
                 <div className="flex items-center justify-between">
+                  <span>Discount</span>
+                  <span className="font-semibold text-emerald-600">
+                    {discount > 0 ? `- $${discount.toFixed(2)}` : "$0.00"}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
                   <span>Shipping</span>
                   <span className="font-semibold text-emerald-600">Free</span>
                 </div>
                 <div className="flex items-center justify-between text-base font-bold text-gray-900">
                   <span>Total</span>
-                  <span>${subtotal.toFixed(2)}</span>
+                  <span>${total.toFixed(2)}</span>
+                </div>
+              </div>
+
+              <div className="mt-6 space-y-3">
+                <label className="text-xs font-semibold uppercase text-gray-500">
+                  Coupon / Promo code
+                </label>
+                <div className="flex flex-col gap-2">
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      className="flex-1 rounded-xl border border-gray-200 px-3 py-3 text-sm shadow-sm focus:border-pink-400 focus:ring-pink-300 uppercase"
+                      placeholder="Enter code"
+                      value={promoCode}
+                      onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
+                    />
+                    <Button
+                      onClick={applyPromo}
+                      variant="secondary"
+                      className="rounded-xl border border-pink-200 bg-pink-50 px-4 py-2 text-sm font-semibold text-pink-700 hover:bg-pink-100"
+                    >
+                      Apply
+                    </Button>
+                  </div>
+                  {promoMessage && (
+                    <p
+                      className={`text-xs font-semibold ${
+                        appliedPromo ? "text-emerald-600" : "text-rose-600"
+                      }`}
+                    >
+                      {promoMessage}
+                    </p>
+                  )}
                 </div>
               </div>
 
