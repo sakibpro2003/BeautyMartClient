@@ -16,7 +16,7 @@ const CustomerSidebar = () => {
   ];
 
   return (
-    <aside className="relative w-full lg:w-72">
+    <aside className="relative w-full lg:w-72 lg:sticky lg:top-6 lg:self-start">
       <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-gray-900 via-black to-gray-800 shadow-[0_20px_80px_rgba(0,0,0,0.2)]" />
       <div className="relative rounded-3xl px-4 py-5 text-white lg:px-6">
         <div className="flex items-center justify-between">

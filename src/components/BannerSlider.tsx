@@ -66,7 +66,7 @@ const BannerSlider = () => {
         loop
         autoplay={{ delay: 5000 }}
         pagination={{ clickable: true }}
-        className="h-full"
+        className="h-full overflow-hidden rounded-3xl shadow-lg"
       >
         {slides.map((slide) => (
           <SwiperSlide key={slide.id}>

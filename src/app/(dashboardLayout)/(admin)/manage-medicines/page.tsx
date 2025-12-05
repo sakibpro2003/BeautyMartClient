@@ -53,99 +53,105 @@ const ManageMedicines = () => {
   );
 
   return (
-    <div className="lg:p-6 rounded-lg shadow-md">
-      <div className="flex justify-between flex-wrap">
-        <h1 className="text-2xl font-bold mb-4">Manage Products</h1>
-        <div className="flex gap-2">
-          <Link href={"/create-new-medicine"} className="btn-custom">
-            Add New Product
-          </Link>
-          <button onClick={handleLogout} className="btn-custom">
-            Logout
-          </button>
+    <div className="space-y-6">
+      <div className="rounded-3xl bg-white/90 p-5 shadow-sm ring-1 ring-gray-100">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <p className="text-xs uppercase tracking-[0.25em] text-pink-500">Admin</p>
+            <h1 className="text-2xl font-bold text-gray-900">Manage products</h1>
+            <p className="text-sm text-gray-600">Edit, update, or remove inventory items.</p>
+          </div>
+          <div className="flex flex-wrap gap-2 text-sm font-semibold">
+            <Link
+              href={"/create-new-medicine"}
+              className="rounded-xl bg-gradient-to-r from-pink-600 to-orange-500 px-4 py-2 text-white shadow-lg shadow-pink-200/60 transition hover:-translate-y-0.5 hover:shadow-xl"
+            >
+              Add new product
+            </Link>
+            <button
+              onClick={handleLogout}
+              className="rounded-xl border border-gray-200 px-4 py-2 text-gray-700 transition hover:bg-gray-100"
+            >
+              Logout
+            </button>
+          </div>
         </div>
       </div>
+
       {medicines.length === 0 ? (
-        <p className="text-gray-400">No medicines available.</p>
+        <div className="rounded-3xl bg-white/90 p-10 text-center shadow-sm ring-1 ring-gray-100">
+          <p className="text-lg font-semibold text-gray-800">No products available</p>
+          <p className="text-sm text-gray-600 mt-2">Create a product to populate this list.</p>
+        </div>
       ) : (
         <>
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse mt-10 border">
-              <thead className="bg-black text-white">
-                <tr>
-                  <th className="p-3 border">Image</th>
-                  <th className="p-3 border">Name</th>
-                  <th className="p-3 border">Description</th>
-                  <th className="p-3 border">Price</th>
-                  <th className="p-3 border">Quantity</th>
-                  <th className="p-3 border">Manufacturer</th>
-                  <th className="p-3 border">Update</th>
-                  <th className="p-3 border">Delete</th>
-                </tr>
-              </thead>
-              <tbody>
-                {paginatedMeds.map((med) => (
-                  <tr key={med._id}>
-                    <td className="p-3 border">
-                      <Image
-                        width={50}
-                        height={50}
-                        unoptimized
-                        src={
-                          med.image && med.image.startsWith("http")
-                            ? med.image
-                            : "/placeholder.jpg"
-                        }
-                        alt={med.name || "No Image"}
-                        className="w-12 h-12 object-cover rounded"
-                      />
-                    </td>
-                    <td className="p-3 border">{med.name}</td>
-                    <td className="p-3 border truncate max-w-xs">
-                      {med.description}
-                    </td>
-                    <td className="p-3 border">${med.price}</td>
-                    <td className="p-3 border">{med.quantity} pcs</td>
-                    <td className="p-3 border">
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {paginatedMeds.map((med) => (
+              <div
+                key={med._id}
+                className="rounded-3xl bg-white/90 p-4 shadow-sm ring-1 ring-gray-100 transition hover:-translate-y-0.5 hover:shadow-lg"
+              >
+                <div className="flex items-start gap-4">
+                  <div className="relative h-24 w-24 overflow-hidden rounded-2xl bg-gradient-to-br from-pink-50 via-white to-amber-50 ring-1 ring-pink-100/70">
+                    <Image
+                      fill
+                      unoptimized
+                      src={med.image && med.image.startsWith("http") ? med.image : "/placeholder.jpg"}
+                      alt={med.name || "No Image"}
+                      className="object-contain"
+                      sizes="120px"
+                    />
+                  </div>
+                  <div className="flex-1 space-y-1">
+                    <p className="text-sm font-semibold text-gray-900 line-clamp-2">{med.name}</p>
+                    <p className="text-xs text-gray-600 line-clamp-2">{med.description}</p>
+                    <div className="flex flex-wrap gap-2 text-xs text-gray-500">
+                      <span className="rounded-full bg-gray-100 px-2 py-1 font-semibold">
+                        ${med.price}
+                      </span>
+                      <span className="rounded-full bg-gray-100 px-2 py-1 font-semibold">
+                        {med.quantity} pcs
+                      </span>
+                    </div>
+                    <p className="text-xs font-semibold text-gray-700">
                       {med.manufacturer?.name || "Unknown"}
-                    </td>
-                    <td>
-                      <Link className="btn-custom" href={`/update/${med._id}`}>
-                        Update
-                      </Link>
-                    </td>
-                    <td>
-                      <button
-                        className="btn-custom"
-                        onClick={() => setSelectedMedId(med._id)}
-                      >
-                        Delete
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mt-4 flex items-center justify-between gap-2">
+                  <Link
+                    className="rounded-xl border border-gray-200 px-3 py-2 text-xs font-semibold text-gray-800 hover:bg-gray-100"
+                    href={`/update/${med._id}`}
+                  >
+                    Update
+                  </Link>
+                  <button
+                    className="rounded-xl border border-rose-200 px-3 py-2 text-xs font-semibold text-rose-700 hover:bg-rose-50"
+                    onClick={() => setSelectedMedId(med._id)}
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
+            ))}
           </div>
 
-          {/* Pagination Controls */}
-          <div className="flex justify-between items-center mt-4 flex-wrap">
+          <div className="flex items-center justify-between rounded-2xl bg-white/90 p-4 text-sm text-gray-700 shadow-sm ring-1 ring-gray-100">
             <button
               onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
               disabled={currentPage === 1}
-              className="btn-custom disabled:opacity-50"
+              className="rounded-full border border-gray-200 px-4 py-2 text-xs font-semibold text-gray-700 disabled:opacity-50"
             >
               Previous
             </button>
-            <span className="text-gray-400">
+            <span className="text-xs font-semibold text-gray-600">
               Page {currentPage} of {totalPages}
             </span>
             <button
-              onClick={() =>
-                setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-              }
+              onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
               disabled={currentPage === totalPages}
-              className="btn-custom disabled:opacity-50"
+              className="rounded-full border border-gray-200 px-4 py-2 text-xs font-semibold text-gray-700 disabled:opacity-50"
             >
               Next
             </button>

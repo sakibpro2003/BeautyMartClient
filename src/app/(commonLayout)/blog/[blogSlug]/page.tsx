@@ -1,15 +1,42 @@
+"use client";
+
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { ArrowLeft } from "lucide-react"; // Use icon
-import { blogs } from "../../../../../data/blogs";
+import { ArrowLeft } from "lucide-react";
 import Image from "next/image";
-import { notFound } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import NextLink from "next/link"; // Import Next.js Link
+import NextLink from "next/link";
+import { use, useEffect, useState } from "react";
+import { mergeBlogs } from "@/utils/blogStorage";
+import { Blog, blogs as defaultBlogs } from "../../../../../data/blogs";
 
-export default function BlogDetailsPage({ params }: any) {
-  const blog = blogs.find((b) => b.blogSlug === params.blogSlug);
+export default function BlogDetailsPage({
+  params,
+}: {
+  params: Promise<{ blogSlug: string }>;
+}) {
+  const resolvedParams = use(params);
 
-  if (!blog) return notFound();
+  const [blog, setBlog] = useState<Blog | undefined>(() =>
+    defaultBlogs.find((b) => b.blogSlug === resolvedParams.blogSlug)
+  );
+
+  useEffect(() => {
+    const allBlogs = mergeBlogs(defaultBlogs);
+    const found = allBlogs.find((b) => b.blogSlug === resolvedParams.blogSlug);
+    setBlog(found);
+  }, [resolvedParams.blogSlug]);
+
+  if (!blog) {
+    return (
+      <main className="w-11/12 md:w-10/12 lg:w-8/12 mx-auto py-24 px-4 text-center space-y-4">
+        <h1 className="text-3xl font-bold text-pink-600">Blog not found</h1>
+        <p className="text-gray-600">The post you are looking for is unavailable.</p>
+        <NextLink href="/blog">
+          <Button className="bg-pink-600 text-white">Back to Blog</Button>
+        </NextLink>
+      </main>
+    );
+  }
 
   return (
     <main className="w-11/12 md:w-10/12 lg:w-8/12 mx-auto py-16 px-4">
@@ -54,7 +81,7 @@ export default function BlogDetailsPage({ params }: any) {
       )}
 
       {/* Blog Content */}
-      <article className="prose max-w-none prose-lg prose-pink text-gray-800 leading-relaxed text-justify">
+      <article className="prose max-w-none prose-lg prose-pink text-gray-800 leading-relaxed text-justify whitespace-pre-line">
         {blog.content}
       </article>
 

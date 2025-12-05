@@ -19,6 +19,7 @@ import { toast } from "react-toastify";
 import Link from "next/link";
 import { Loader2 } from "lucide-react";
 import { useUser } from "@/context/UserContext";
+import { jwtDecode } from "jwt-decode";
 
 const Login = () => {
   const router = useRouter();
@@ -54,7 +55,15 @@ const Login = () => {
       if (res?.success === true) {
         toast.success("Login successful!");
         setIsLoading(true);
-        router.push("/");
+        const token = res?.data?.token;
+        let redirectPath = "/";
+        if (token) {
+          const decoded: any = jwtDecode(token);
+          if (decoded?.role === "admin") {
+            redirectPath = "/manage-orders";
+          }
+        }
+        router.push(redirectPath);
       } else {
         toast.error(res.message);
       }
