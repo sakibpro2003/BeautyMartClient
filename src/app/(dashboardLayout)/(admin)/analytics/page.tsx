@@ -30,13 +30,11 @@ ChartJS.register(
   Legend
 );
 
-const formatCurrency = (value: number) =>
-  value.toLocaleString("en-US", {
-    style: "currency",
-    currency: "USD",
+const formatBDT = (value: number) =>
+  `BDT ${value.toLocaleString("en-US", {
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
-  });
+  })}`;
 
 const AdminAnalyticsPage = () => {
   const [orders, setOrders] = useState<TOrder[]>([]);
@@ -197,13 +195,13 @@ const AdminAnalyticsPage = () => {
   const metricCards = [
     {
       label: "Total revenue",
-      value: metrics.revenue ? formatCurrency(metrics.revenue) : "$0",
+      value: metrics.revenue ? formatBDT(metrics.revenue) : "BDT 0",
       icon: <Wallet size={18} />,
       tone: "from-pink-100 to-amber-50 text-pink-700",
     },
     {
       label: "Average order",
-      value: metrics.avgOrder ? formatCurrency(metrics.avgOrder) : "$0",
+      value: metrics.avgOrder ? formatBDT(metrics.avgOrder) : "BDT 0",
       icon: <TrendingUp size={18} />,
       tone: "from-blue-50 to-indigo-50 text-blue-700",
     },
@@ -275,7 +273,7 @@ const AdminAnalyticsPage = () => {
                 responsive: true,
                 plugins: { legend: { display: false } },
                 scales: {
-                  y: { ticks: { callback: (val) => `$${val}` }, grid: { color: "#f3f4f6" } },
+                  y: { ticks: { callback: (val) => `BDT ${val}` }, grid: { color: "#f3f4f6" } },
                   x: { grid: { display: false } },
                 },
               }}

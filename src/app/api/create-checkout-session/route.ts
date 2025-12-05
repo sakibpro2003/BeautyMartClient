@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
       payment_method_types: ["card"],
       line_items: (items as CheckoutItem[]).map((item) => ({
         price_data: {
-          currency: "usd",
+          currency: "bdt",
           product_data: {
             name: item.name,
             ...(item.image ? { images: [item.image] } : {}),

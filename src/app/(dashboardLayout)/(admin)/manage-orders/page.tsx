@@ -8,6 +8,7 @@ import Image from "next/image";
 import React, { useEffect, useMemo, useState } from "react";
 import { toast } from "react-toastify";
 import { CheckCircle2, Package, Truck, XCircle } from "lucide-react";
+import { formatBDT } from "@/utils/currency";
 
 const statusOptions = ["pending", "processing", "completed", "canceled"];
 
@@ -87,7 +88,7 @@ const OrdersPage = () => {
             </div>
             <div className="rounded-2xl border border-gray-100 bg-gray-50 px-4 py-3 text-sm text-gray-800">
               <p className="text-xs font-semibold uppercase">Revenue</p>
-              <p className="text-xl font-bold">${totals.totalRevenue.toFixed(2)}</p>
+              <p className="text-xl font-bold">{formatBDT(totals.totalRevenue)}</p>
             </div>
           </div>
         </div>
@@ -125,7 +126,7 @@ const OrdersPage = () => {
                     <span className="uppercase tracking-wide">{order?.status}</span>
                   </div>
                   <div className="rounded-full bg-gray-900 px-4 py-2 text-xs font-semibold text-white">
-                    ${order?.totalAmount}
+                    {formatBDT(order?.totalAmount)}
                   </div>
                 </div>
               </div>

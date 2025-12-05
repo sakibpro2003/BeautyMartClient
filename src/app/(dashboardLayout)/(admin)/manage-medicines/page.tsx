@@ -9,6 +9,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { deleteSingleProduct } from "@/services/Products";
 import withAdminAuth from "@/hoc/withAdminAuth";
+import { formatBDT } from "@/utils/currency";
 
 const ManageMedicines = () => {
   const router = useRouter();
@@ -107,7 +108,7 @@ const ManageMedicines = () => {
                     <p className="text-xs text-gray-600 line-clamp-2">{med.description}</p>
                     <div className="flex flex-wrap gap-2 text-xs text-gray-500">
                       <span className="rounded-full bg-gray-100 px-2 py-1 font-semibold">
-                        ${med.price}
+                        {formatBDT(med.price)}
                       </span>
                       <span className="rounded-full bg-gray-100 px-2 py-1 font-semibold">
                         {med.quantity} pcs

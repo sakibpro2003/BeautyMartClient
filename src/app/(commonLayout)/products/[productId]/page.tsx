@@ -3,13 +3,17 @@
 
 import { addToCart } from "@/services/Cart";
 import { getSingleProduct } from "@/services/Products";
+import { fetchProductReviews } from "@/services/Reviews";
 import Image from "next/image";
-import React, { useEffect, useState, use } from "react";
+import React, { useEffect, useMemo, useState, use } from "react";
+import { StarRating } from "@/components/StarRating";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { Loader2 } from "lucide-react";
 import Loader from "@/components/Loader";
 import { useRouter } from "next/navigation";
+import { formatBDT } from "@/utils/currency";
+import { TReview } from "@/types/review";
 
 const ProductDetails = ({
   params,
@@ -20,6 +24,8 @@ const ProductDetails = ({
   const [product, setProduct] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
+  const [reviews, setReviews] = useState<TReview[]>([]);
+  const [reviewsLoading, setReviewsLoading] = useState(false);
   const isOutOfStock = !product?.inStock || product?.quantity <= 0;
   const router = useRouter();
 
@@ -35,7 +41,22 @@ const ProductDetails = ({
       }
     };
 
+    const fetchReviews = async () => {
+      try {
+        setReviewsLoading(true);
+        const res = await fetchProductReviews(productId);
+        if (res?.success) {
+          setReviews(res.data);
+        }
+      } catch (error) {
+        console.error("Error fetching product reviews:", error);
+      } finally {
+        setReviewsLoading(false);
+      }
+    };
+
     fetchProduct();
+    fetchReviews();
   }, [productId]);
 
   type TAddCart = {
@@ -70,6 +91,14 @@ const ProductDetails = ({
       setIsAddingToCart(false);
     }
   };
+
+  const averageRating = useMemo(() => {
+    if (reviews.length) {
+      const total = reviews.reduce((sum, r) => sum + (r.rating || 0), 0);
+      return total / reviews.length;
+    }
+    return product?.rating || 0;
+  }, [reviews, product]);
 
   if (loading) {
     return <Loader />;
@@ -174,19 +203,22 @@ const ProductDetails = ({
                     {product?.description || "No description available."}
                   </p>
                 </div>
-                {product?.rating ? (
-                  <div className="rounded-2xl bg-amber-50 px-4 py-2 text-center ring-1 ring-amber-100">
-                    <p className="text-xs font-semibold text-amber-700">Rating</p>
-                    <p className="text-xl font-bold text-amber-800">{product.rating.toFixed(1)}</p>
-                  </div>
-                ) : null}
+                <div className="rounded-2xl bg-amber-50 px-4 py-2 text-center ring-1 ring-amber-100">
+                  <p className="text-xs font-semibold text-amber-700">Rating</p>
+                  <p className="text-xl font-bold text-amber-800">
+                    {averageRating ? averageRating.toFixed(1) : "New"}
+                  </p>
+                  <p className="text-[11px] font-semibold text-amber-700">
+                    {reviews.length} review{reviews.length === 1 ? "" : "s"}
+                  </p>
+                </div>
               </div>
 
               <div className="mt-4 grid gap-3 sm:grid-cols-2">
                 <div className="rounded-2xl bg-gradient-to-r from-pink-600 to-orange-500 px-5 py-4 text-white shadow-lg shadow-pink-200/60">
                   <p className="text-sm font-semibold">Total</p>
                   <p className="text-3xl font-bold">
-                    ${product?.price || "N/A"}
+                    {product?.price ? formatBDT(product.price) : "N/A"}
                     <span className="ml-2 text-sm font-medium text-orange-100">incl. taxes</span>
                   </p>
                 </div>
@@ -229,7 +261,7 @@ const ProductDetails = ({
                 <div className="flex items-center justify-between text-xs text-gray-600">
                   <span className="inline-flex items-center gap-2">
                     <span className="h-2 w-2 rounded-full bg-emerald-400" />
-                    Free delivery on orders over $50
+                    Free delivery on orders over BDT 5,000
                   </span>
                   <span>Secure checkout</span>
                 </div>
@@ -267,6 +299,81 @@ const ProductDetails = ({
               </div>
             </div>
           </div>
+        </div>
+      </div>
+      <div className="max-w-6xl mx-auto px-4 lg:px-6 pt-6">
+        <div className="rounded-3xl bg-white/90 p-6 shadow-sm ring-1 ring-gray-100 space-y-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <p className="text-xs uppercase tracking-[0.25em] text-pink-500">Reviews</p>
+              <h2 className="text-xl font-bold text-gray-900">
+                What customers say about this product
+              </h2>
+              <p className="text-sm text-gray-600">
+                Average rating {averageRating ? averageRating.toFixed(1) : "New"} •{" "}
+                {reviews.length} review{reviews.length === 1 ? "" : "s"}
+              </p>
+            </div>
+            <div className="rounded-2xl bg-amber-50 px-4 py-2 text-center ring-1 ring-amber-100">
+              <p className="text-xs font-semibold text-amber-700">Rating</p>
+              <p className="text-xl font-bold text-amber-800">
+                {averageRating ? averageRating.toFixed(1) : "New"}
+              </p>
+              <p className="text-[11px] font-semibold text-amber-700">
+                {reviews.length} review{reviews.length === 1 ? "" : "s"}
+              </p>
+            </div>
+          </div>
+
+          {reviewsLoading ? (
+            <div className="rounded-2xl bg-gray-50 p-4 text-sm text-gray-600">Loading reviews...</div>
+          ) : reviews.length === 0 ? (
+            <div className="rounded-2xl bg-gray-50 p-4 text-sm text-gray-600">
+              No reviews yet. Be the first to share your experience.
+            </div>
+          ) : (
+            <div className="grid gap-3">
+              {reviews.map((review) => (
+                <div
+                  key={review._id}
+                  className="rounded-2xl border border-gray-100 bg-white px-4 py-3 shadow-sm"
+                >
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                      <p className="text-sm font-semibold text-gray-900">
+                        {review.user?.name || "Verified buyer"}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        {new Date(review.createdAt).toLocaleDateString()}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2 text-xs text-amber-500">
+                      <StarRating rating={review.rating} />
+                      <span className="text-gray-600">{review.rating.toFixed(1)}</span>
+                    </div>
+                  </div>
+                  <p className="mt-2 text-sm text-gray-800">{review.comment}</p>
+                  {review.adminReply ? (
+                    <div className="mt-2 rounded-xl bg-pink-50 px-3 py-2 text-xs text-pink-800 ring-1 ring-pink-100">
+                      Admin reply: {review.adminReply}
+                    </div>
+                  ) : null}
+                  {review.keywords?.length ? (
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {review.keywords.map((kw) => (
+                        <span
+                          key={kw}
+                          className="rounded-full bg-gray-100 px-2 py-1 text-[11px] font-semibold text-gray-700"
+                        >
+                          #{kw}
+                        </span>
+                      ))}
+                    </div>
+                  ) : null}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>

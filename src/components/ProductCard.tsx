@@ -7,6 +7,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { StarRating } from "./StarRating";
+import { formatBDT } from "@/utils/currency";
 
 const limit = 8;
 const sortOptions = [
@@ -111,8 +112,8 @@ const ProductCard = () => {
     if (brandFilterLocal || brandFilter) chips.push(`Brand: ${brandFilterLocal || brandFilter}`);
     if (categoryQuery || categoryFilter) chips.push(`Category: ${categoryQuery || categoryFilter}`);
     if (formFilter) chips.push(`Form: ${formFilter}`);
-    if (minPrice) chips.push(`Min $${minPrice}`);
-    if (maxPrice) chips.push(`Max $${maxPrice}`);
+    if (minPrice) chips.push(`Min BDT ${minPrice}`);
+    if (maxPrice) chips.push(`Max BDT ${maxPrice}`);
     if (minRating) chips.push(`Rating ≥ ${minRating}`);
     if (stockFilter) chips.push(stockFilter === "in" ? "In stock" : "Out of stock");
     return chips;
@@ -420,7 +421,7 @@ const ProductCard = () => {
 
                         <div className="flex items-center justify-between">
                           <span className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-pink-600 to-orange-500 px-3 py-1 text-sm font-bold text-white shadow-lg shadow-pink-200/60">
-                            ${p.price}
+                            {formatBDT(p.price)}
                           </span>
                           <span
                             className={`rounded-full px-3 py-1 text-xs font-semibold ring-1 ${

@@ -15,6 +15,7 @@ import {
   Boxes,
   FilePlus,
   LineChart,
+  MessageSquare,
 } from "lucide-react";
 
 const AdminSidebar = () => {
@@ -27,6 +28,7 @@ const AdminSidebar = () => {
     { name: "Inventory", path: "/inventory", icon: Boxes },
     { name: "Promotions", path: "/promotions", icon: Package },
     { name: "Manage Products", path: "/manage-products", icon: Boxes },
+    { name: "Reviews", path: "/reviews", icon: MessageSquare },
     { name: "Manage Orders", path: "/manage-orders", icon: ClipboardList },
     { name: "Manage Users", path: "/manage-users", icon: Users },
     { name: "Create Blog", path: "/create-blog", icon: FilePlus },

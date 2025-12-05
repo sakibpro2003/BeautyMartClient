@@ -11,6 +11,7 @@ import {
   removeItem,
 } from "@/services/Cart";
 import { validatePromotion } from "@/services/Promotions";
+import { formatBDT } from "@/utils/currency";
 import Image from "next/image";
 import React, { useEffect, useState } from "react";
 import { toast } from "react-toastify";
@@ -194,7 +195,7 @@ const CartPage = () => {
             <p className="text-xs uppercase tracking-[0.25em] text-pink-500">Your bag</p>
             <h1 className="text-3xl font-bold text-gray-900">Review your cart</h1>
             <p className="text-sm text-gray-600">
-              {totalItems} item{totalItems === 1 ? "" : "s"} • ${subtotal.toFixed(2)}
+              {totalItems} item{totalItems === 1 ? "" : "s"} • {formatBDT(subtotal)}
             </p>
           </div>
           <div className="flex flex-wrap gap-3 text-xs font-semibold text-gray-600">
@@ -236,7 +237,7 @@ const CartPage = () => {
                         <p className="text-base font-semibold text-gray-900">
                           {item.product.name}
                         </p>
-                        <p className="text-sm text-gray-600">${item.product.price}</p>
+                        <p className="text-sm text-gray-600">{formatBDT(item.product.price)}</p>
                         <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
                           {item.product.inStock ? "In stock" : "Out of stock"}
                         </p>
@@ -263,7 +264,7 @@ const CartPage = () => {
                       <div className="text-right">
                         <p className="text-sm text-gray-500">Total</p>
                         <p className="text-lg font-bold text-gray-900">
-                          ${(item.product.price * item.quantity).toFixed(2)}
+                          {formatBDT(item.product.price * item.quantity)}
                         </p>
                       </div>
 
@@ -287,12 +288,12 @@ const CartPage = () => {
               <div className="mt-4 space-y-3 text-sm text-gray-700">
                 <div className="flex items-center justify-between">
                   <span>Subtotal</span>
-                  <span className="font-semibold">${subtotal.toFixed(2)}</span>
+                  <span className="font-semibold">{formatBDT(subtotal)}</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span>Discount</span>
                   <span className="font-semibold text-emerald-600">
-                    {discount > 0 ? `- $${discount.toFixed(2)}` : "$0.00"}
+                    {discount > 0 ? `- ${formatBDT(discount)}` : formatBDT(0)}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
@@ -301,7 +302,7 @@ const CartPage = () => {
                 </div>
                 <div className="flex items-center justify-between text-base font-bold text-gray-900">
                   <span>Total</span>
-                  <span>${total.toFixed(2)}</span>
+                  <span>{formatBDT(total)}</span>
                 </div>
               </div>
 
