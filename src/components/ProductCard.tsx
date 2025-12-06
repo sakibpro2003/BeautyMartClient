@@ -63,6 +63,10 @@ const ProductCard = () => {
   const [minRating, setMinRating] = useState("");
   const [brandFilterLocal, setBrandFilterLocal] = useState("");
   const [wishlistIds, setWishlistIds] = useState<string[]>([]);
+  const [compareItems, setCompareItems] = useState<
+    { id: string; name: string; image: string; price: number; category?: string; form?: string; typeKey: string }[]
+  >([]);
+  const compareStorageKey = "beautymart_compare";
 
   const searchParams = useSearchParams();
   const brandFilter = searchParams.get("brand");
@@ -239,6 +243,73 @@ const ProductCard = () => {
     setMinRating("");
     setBrandFilterLocal("");
     setSortOption("newest");
+  };
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      const saved = localStorage.getItem(compareStorageKey);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          setCompareItems(parsed);
+        }
+      }
+    } catch (err) {
+      console.error("Failed to load compare list", err);
+    }
+  }, []);
+
+  const persistCompare = (next: typeof compareItems) => {
+    setCompareItems(next);
+    if (typeof window !== "undefined") {
+      localStorage.setItem(compareStorageKey, JSON.stringify(next));
+    }
+  };
+
+  const removeCompareItem = (id: string) => {
+    persistCompare(compareItems.filter((c) => c.id !== id));
+  };
+
+  const toggleCompare = (product: any) => {
+    const typeKey = (product?.category || product?.form || "").toLowerCase();
+    if (!product?._id) return;
+    if (!typeKey) {
+      toast.error("This product is missing a type to compare.");
+      return;
+    }
+
+    const exists = compareItems.some((c) => c.id === product._id);
+    if (exists) {
+      removeCompareItem(product._id);
+      toast.info("Removed from compare");
+      return;
+    }
+
+    if (compareItems.length >= 2) {
+      toast.error("You can compare up to 2 products at a time.");
+      return;
+    }
+
+    if (compareItems.length > 0 && compareItems[0].typeKey !== typeKey) {
+      toast.error("Pick products of the same type (e.g., both facewash).");
+      return;
+    }
+
+    const next = [
+      ...compareItems,
+      {
+        id: product._id,
+        name: product.name,
+        image: product.image,
+        price: product.price,
+        category: product.category,
+        form: product.form,
+        typeKey,
+      },
+    ];
+    persistCompare(next);
+    toast.success("Added to compare");
   };
 
   return (
@@ -518,11 +589,57 @@ const ProductCard = () => {
                       >
                         View details
                       </Link>
+                      <button
+                        type="button"
+                        onClick={() => toggleCompare(p)}
+                        className={`mt-2 inline-flex items-center justify-center rounded-full px-4 py-2 text-sm font-semibold shadow-sm transition ${
+                          compareItems.some((c) => c.id === p._id)
+                            ? "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100"
+                            : "bg-white text-pink-700 ring-1 ring-pink-200 hover:bg-pink-50"
+                        }`}
+                      >
+                        {compareItems.some((c) => c.id === p._id) ? "Added to compare" : "Compare"}
+                      </button>
                     </div>
                   </div>
                 ))
               )}
             </div>
+
+            {compareItems.length ? (
+              <div className="sticky bottom-4 z-20 mt-4 rounded-3xl border border-gray-100 bg-white/95 p-4 shadow-[0_15px_60px_rgba(0,0,0,0.12)] backdrop-blur">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <span className="rounded-full bg-pink-100 px-3 py-1 text-xs font-semibold text-pink-700">
+                      Compare up to 2 similar products
+                    </span>
+                    <div className="flex flex-wrap gap-2">
+                      {compareItems.map((item) => (
+                        <div
+                          key={item.id}
+                          className="inline-flex items-center gap-2 rounded-full bg-gray-50 px-3 py-1 text-xs font-semibold text-gray-800 ring-1 ring-gray-200"
+                        >
+                          {item.name}
+                          <button
+                            onClick={() => removeCompareItem(item.id)}
+                            className="text-gray-500 hover:text-rose-600"
+                            aria-label="Remove from compare"
+                          >
+                            ×
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <Link
+                    href="/compare"
+                    className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-pink-600 to-orange-500 px-4 py-2 text-sm font-semibold text-white shadow-lg transition hover:-translate-y-0.5"
+                  >
+                    Compare now
+                  </Link>
+                </div>
+              </div>
+            ) : null}
 
             {meta.totalPages > 1 && (
               <div className="flex items-center justify-between">

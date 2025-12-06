@@ -229,25 +229,37 @@ const CustomerInsightsPage = () => {
         {cohorts.length === 0 ? (
           <EmptyState message="No cohorts yet." />
         ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full text-sm border border-gray-100">
-              <thead className="bg-gray-900 text-white text-xs">
+          <div className="overflow-x-auto rounded-2xl border border-gray-100 bg-white shadow-sm">
+            <table className="min-w-full text-sm">
+              <thead className="bg-gradient-to-r from-gray-900 to-gray-800 text-white text-xs uppercase tracking-wide">
                 <tr>
-                  <th className="px-3 py-2 text-left">Cohort</th>
-                  <th className="px-3 py-2 text-left">Customers</th>
-                  <th className="px-3 py-2 text-left">Repeat buyers</th>
-                  <th className="px-3 py-2 text-left">Retention rate</th>
+                  <th className="px-4 py-3 text-left">Cohort</th>
+                  <th className="px-4 py-3 text-left">Customers</th>
+                  <th className="px-4 py-3 text-left">Repeat buyers</th>
+                  <th className="px-4 py-3 text-left">Retention rate</th>
                 </tr>
               </thead>
               <tbody>
-                {cohorts.map((c) => {
+                {cohorts.map((c, idx) => {
                   const rate = c.users ? (c.repeaters / c.users) * 100 : 0;
                   return (
-                    <tr key={c.label} className="odd:bg-gray-50">
-                      <td className="px-3 py-2 font-semibold text-gray-900">{c.label}</td>
-                      <td className="px-3 py-2 text-gray-700">{c.users}</td>
-                      <td className="px-3 py-2 text-gray-700">{c.repeaters}</td>
-                      <td className="px-3 py-2 text-gray-700">{rate.toFixed(0)}%</td>
+                    <tr key={c.label} className={idx % 2 === 0 ? "bg-gray-50/60" : "bg-white"}>
+                      <td className="px-4 py-3 font-semibold text-gray-900">{c.label}</td>
+                      <td className="px-4 py-3 text-gray-700">{c.users}</td>
+                      <td className="px-4 py-3 text-gray-700">{c.repeaters}</td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-2">
+                          <div className="h-2 flex-1 rounded-full bg-gray-200">
+                            <div
+                              className="h-2 rounded-full bg-pink-500 transition-all"
+                              style={{ width: `${Math.min(rate, 100)}%` }}
+                            />
+                          </div>
+                          <span className="text-xs font-semibold text-gray-800 w-12 text-right">
+                            {rate.toFixed(0)}%
+                          </span>
+                        </div>
+                      </td>
                     </tr>
                   );
                 })}
