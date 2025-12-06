@@ -4,7 +4,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { Menu, X, ShoppingBag, Home, RotateCcw, MessageCircle, LineChart } from "lucide-react";
+import { Menu, X, ShoppingBag, Home, RotateCcw, MessageCircle, LineChart, Palette } from "lucide-react";
 
 const CustomerSidebar = () => {
   const pathname = usePathname();
@@ -13,6 +13,7 @@ const CustomerSidebar = () => {
   const navItems = [
     { name: "Home", path: "/", icon: Home },
     { name: "Analytics", path: "/customer-analytics", icon: LineChart },
+    { name: "Shade Match", path: "/shade-match", icon: Palette },
     { name: "My Orders", path: "/my-orders", icon: ShoppingBag },
     { name: "Returns & Exchanges", path: "/returns", icon: RotateCcw },
     { name: "Support & Feedback", path: "/support", icon: MessageCircle },
