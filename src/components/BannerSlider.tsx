@@ -1,66 +1,27 @@
 "use client";
 
+import { useMemo } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay, Pagination } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/pagination";
-import Link from "next/link";
+import { BannerContent } from "@/types/content";
+import { defaultBanners } from "@/data/content";
 
-const slides = [
-  {
-    id: 1,
-    image: "/banners/image.png",
-    heading: "Glow with Confidence",
-    description:
-      "Discover premium skincare products that bring out your natural radiance.",
-    button: "Shop Skincare",
-  },
-  {
-    id: 2,
-    image: "/banners/image2.png",
-    heading: "Luxury Meets Affordability",
-    description:
-      "Get high-quality image essentials at prices you’ll love.",
-    button: "Shop Now",
-  },
-  {
-    id: 3,
-    image: "/banners/image3.png",
-    heading: "Makeup for Every Occasion",
-    description:
-      "From everyday looks to glam nights, find makeup that suits your style.",
-    button: "Shop Makeup",
-  },
-  {
-    id: 4,
-    image: "/banners/image4.png",
-    heading: "Nourish Your Hair",
-    description:
-      "Explore shampoos, conditioners, and treatments for healthy, shiny hair.",
-    button: "Shop Haircare",
-  },
-  {
-    id: 5,
-    image: "/banners/image5.png",
-    heading: "Fragrance that Defines You",
-    description:
-      "Find your signature scent from our wide range of perfumes.",
-    button: "Shop Fragrance",
-  },
-  {
-    id: 6,
-    image: "/banners/image6.png",
-    heading: "Fragrance that Defines You",
-    description:
-      "Find your signature scent from our wide range of perfumes.",
-    button: "Shop Fragrance",
-  },
-];
+type Props = {
+  slides?: BannerContent[];
+};
 
-const BannerSlider = () => {
+const BannerSlider = ({ slides }: Props) => {
+  const bannerSlides = useMemo(() => {
+    const source = slides && slides.length ? slides : defaultBanners;
+    return source.filter((item) => item.isActive !== false);
+  }, [slides]);
+
   return (
-    <div className="w-11/12 mx-auto relative">
+    <div className="relative mx-auto w-11/12">
       <Swiper
         modules={[Autoplay, Pagination]}
         loop
@@ -68,29 +29,40 @@ const BannerSlider = () => {
         pagination={{ clickable: true }}
         className="h-full overflow-hidden rounded-3xl shadow-lg"
       >
-        {slides.map((slide) => (
-          <SwiperSlide key={slide.id}>
-            <div className="relative w-full h-[600px]">
+        {bannerSlides.map((slide, index) => (
+          <SwiperSlide key={slide._id || slide.title || index}>
+            <div className="relative h-[520px] w-full overflow-hidden">
               <Image
                 src={slide.image}
-                alt={slide.heading}
+                alt={slide.title}
                 fill
                 className="object-cover"
-                priority
+                priority={index === 0}
                 unoptimized
               />
-              <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center px-10 text-center">
-                <div className="text-white max-w-xl space-y-4">
-                  <h2 className="text-3xl md:text-5xl font-bold">{slide.heading}</h2>
-                  <p className="text-lg md:text-xl">{slide.description}</p>
+              {/* <div className="absolute inset-0 bg-gradient-to-r from-black/55 via-black/35 to-transparent">
+                <div className="flex h-full w-full items-center px-6 pb-16 pt-12 sm:px-10 lg:px-16">
+                  <div className="max-w-2xl space-y-4 text-white">
+                    <p className="inline-flex rounded-full bg-white/10 px-4 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-pink-100">
+                      Featured
+                    </p>
+                    <h2 className="text-3xl font-bold leading-tight sm:text-4xl lg:text-5xl">
+                      {slide.title}
+                    </h2>
+                    <p className="text-base text-gray-100 sm:text-lg lg:text-xl">
+                      {slide.description}
+                    </p>
+                    {slide.ctaLabel && (
+                      <Link
+                        href={slide.ctaLink || "/products"}
+                        className="inline-flex items-center justify-center rounded-full bg-pink-500 px-5 py-3 text-sm font-semibold text-white shadow-lg transition hover:-translate-y-0.5 hover:bg-pink-600 hover:shadow-pink-500/40"
+                      >
+                        {slide.ctaLabel}
+                      </Link>
+                    )}
+                  </div>
                 </div>
-                <Link
-                  href="/products"
-                  className="mt-6 bg-pink-600 hover:bg-pink-700 text-white font-semibold px-6 py-3 rounded-lg shadow-lg transition"
-                >
-                  {slide.button}
-                </Link>
-              </div>
+              </div> */}
             </div>
           </SwiperSlide>
         ))}

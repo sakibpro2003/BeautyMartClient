@@ -16,6 +16,8 @@ import {
   FilePlus,
   LineChart,
   MessageSquare,
+  HelpCircle,
+  RotateCcw,
 } from "lucide-react";
 
 const AdminSidebar = () => {
@@ -25,8 +27,12 @@ const AdminSidebar = () => {
   const navItems = [
     { name: "Home", path: "/", icon: Home },
     { name: "Analytics", path: "/analytics", icon: LineChart },
+    { name: "Customer Insights", path: "/customer-insights", icon: Users },
     { name: "Inventory", path: "/inventory", icon: Boxes },
     { name: "Promotions", path: "/promotions", icon: Package },
+    { name: "Content & FAQs", path: "/content-manager", icon: HelpCircle },
+    { name: "Returns / RMA", path: "/manage-returns", icon: RotateCcw },
+    { name: "Support Inbox", path: "/support-tickets", icon: MessageSquare },
     { name: "Manage Products", path: "/manage-products", icon: Boxes },
     { name: "Reviews", path: "/reviews", icon: MessageSquare },
     { name: "Manage Orders", path: "/manage-orders", icon: ClipboardList },
